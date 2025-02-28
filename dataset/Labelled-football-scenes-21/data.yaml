@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['ball']
+
+roboflow:
+  workspace: offside-tzbqd
+  project: labelled-football-scenes
+  version: 21
+  license: Private
+  url: https://app.roboflow.com/offside-tzbqd/labelled-football-scenes/21
