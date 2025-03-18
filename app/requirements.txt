@@ -1,0 +1,13 @@
+git+https://github.com/roboflow/sports.git
+
+Django
+django-widget-tweaks
+dotenv
+matplotlib
+numpy
+opencv-python
+pillow
+scikit-learn
+supervision
+tensorflow
+ultralytics

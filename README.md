@@ -1,1 +1,1 @@
-# automated-offside
+# Dockerised automated-offside detection system
