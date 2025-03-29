@@ -1,0 +1,45 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h2>Upload an Image for Processing</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="imageInput" name="image" accept="image/*" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <h3>Processed Image:</h3>
+    <img id="resultImage" style="max-width: 500px; display: none;"/>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            const imageInput = document.getElementById("imageInput");
+            
+            if (imageInput.files.length === 0) {
+                alert("Please select an image.");
+                return;
+            }
+
+            formData.append("image", imageInput.files[0]);
+
+            fetch("{% url 'process_image' %}", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to process image");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const imgUrl = URL.createObjectURL(blob);
+                document.getElementById("resultImage").src = imgUrl;
+                document.getElementById("resultImage").style.display = "block";
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+{% endblock %}

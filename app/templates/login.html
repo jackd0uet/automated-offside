@@ -1,0 +1,35 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+{% load widget_tweaks %}
+
+    {% if form.errors %}
+        <h1> You have entered an incorrect username or password. Please try again.</h1>
+    {% endif %}
+
+    {% if next %}
+        {% if user.is_authenticated %}
+            <h1> Access Denied. Please login with an account with higher privileges.</h1>
+        {% else %}
+            <h1>Login</h1>
+        {% endif %}
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_username">{{ form.username.label }}</label>
+            {% render_field form.username class="form-control" %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_password">{{ form.password.label }}</label>
+            {% render_field form.password class="form-control" %}
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2 mb-2">Login</button>
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+
+{% endblock %}
