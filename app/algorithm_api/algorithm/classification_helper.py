@@ -15,7 +15,7 @@ class ClassificationHelper():
 
         self.model = self.resnet()
 
-    def resnet(self):
+    def resnet(self) -> Model:
         base_model = ResNet50(weights='imagenet', include_top=False, pooling='avg')
         return Model(inputs=base_model.input, outputs=base_model.output)
     
