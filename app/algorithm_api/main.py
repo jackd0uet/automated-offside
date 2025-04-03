@@ -16,16 +16,16 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 app = FastAPI()
 
-object_detection = ObjectDetection(weights_directory="weights")
-classification_helper = ClassificationHelper()
-key_point_detection = KeyPointDetection()
-
 @app.get("/")
 def read_root():
     return {"message": "Algorithm API is running"}
 
 @app.post("/object_detection/")
 async def detection(image: UploadFile = File(...)):
+    object_detection = ObjectDetection(weights_directory="weights")
+    classification_helper = ClassificationHelper()
+    key_point_detection = KeyPointDetection()
+
     try:
         contents = await image.read()
         np_image = np.frombuffer(contents, np.uint8)

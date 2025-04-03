@@ -7,15 +7,15 @@ class OffsideClassification():
         self.all_detections = all_detections
         self.players_detections = players_detections
 
-        self.attackers, self.defenders = self.assign_roles()
+        self.attackers, self.defenders = self.__assign_roles()
 
         self.offside_status = {}
 
-    def assign_roles(self):
+    def __assign_roles(self):
         team_0 = self.players_detections[self.players_detections.class_id == 0]
         team_1 = self.players_detections[self.players_detections.class_id == 1]
 
-        if self.detect_goalkeeper():
+        if self.__detect_goalkeeper():
             defending_team = 0 if len(team_0[team_0.data['class_name'] == 'goalkeeper']) > 0 else 1
         else:
             # TODO: Work out fallback behavior if no keeper
@@ -23,28 +23,11 @@ class OffsideClassification():
 
         return (team_1, team_0) if defending_team == 0 else (team_0, team_1)
 
-    def detect_goalkeeper(self):
+    def __detect_goalkeeper(self):
         if len(self.all_detections[self.all_detections.class_id == self.GOALKEEPER_ID]) > 0:
             return True
 
-    def classify(self):
-        attacking_xy = self.attackers.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
-        defending_xy = self.defenders.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
-
-        second_defender_xy = self.get_second_defender(defending_xy)
-
-        self.setup_offside_status()
-
-        player_count = 0
-
-        for player_pos in attacking_xy:
-            if player_pos[0] > second_defender_xy[0]:
-                self.offside_status[player_count]['offside'] = True
-            player_count += 1
-
-        return self.offside_status
-
-    def get_second_defender(team_xy):
+    def __get_second_defender(self, team_xy):
         highest = [-1, -float('inf')]
         second_highest = [-2,-float('inf')]
 
@@ -59,6 +42,23 @@ class OffsideClassification():
 
         return team_xy[second_highest[0]]
 
-    def setup_offside_status(self):
+    def __setup_offside_status(self):
         for idx in enumerate(self.attackers):
             self.offside_status[idx] = {"offside": False}
+
+    def classify(self):
+        attacking_xy = self.attackers.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
+        defending_xy = self.defenders.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
+
+        second_defender_xy = self.__get_second_defender(defending_xy)
+
+        self.__setup_offside_status()
+
+        player_count = 0
+
+        for player_pos in attacking_xy:
+            if player_pos[0] > second_defender_xy[0]:
+                self.offside_status[player_count]['offside'] = True
+            player_count += 1
+
+        return self.offside_status

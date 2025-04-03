@@ -10,9 +10,9 @@ class VisualizationHelper():
         self.frame_reference_points = key_points.xy[0][conf_filter]
         self.pitch_reference_points = np.array(self.config.vertices)[conf_filter]
 
-        self.transformer = self.set_transformer()
+        self.transformer = self.__set_transformer()
 
-    def set_transformer(self):
+    def __set_transformer(self):
         return ViewTransformer(
             source=self.frame_reference_points,
             target=self.pitch_reference_points
