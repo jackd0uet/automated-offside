@@ -1,7 +1,8 @@
 import cv2
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
+import json
 import logging
 import numpy as np
 import os
@@ -10,21 +11,29 @@ import supervision as sv
 from algorithm.classification_helper import ClassificationHelper
 from algorithm.key_point_detection import KeyPointDetection
 from algorithm.object_detection import ObjectDetection
+from algorithm.offside_classification import OffsideClassification
 from algorithm.visualization_helper import VisualizationHelper
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 app = FastAPI()
 
+object_detection = ObjectDetection(weights_directory="weights")
+key_point_detection = KeyPointDetection()
+
 @app.get("/")
 def read_root():
     return {"message": "Algorithm API is running"}
 
-@app.post("/object_detection/")
-async def detection(image: UploadFile = File(...)):
-    object_detection = ObjectDetection(weights_directory="weights")
+@app.post("/object-detection/")
+async def detection(
+    image: UploadFile = File(...),
+    confidence: float = Form(0.5)
+):
     classification_helper = ClassificationHelper()
-    key_point_detection = KeyPointDetection()
+
+    if confidence != 0.5:
+        object_detection.threshold = confidence
 
     try:
         contents = await image.read()
@@ -42,8 +51,6 @@ async def detection(image: UploadFile = File(...)):
         player_crops = [sv.crop_image(image, xyxy) for xyxy in players_detections.xyxy]
 
         players_detections.class_id = classification_helper.team_classifier(player_crops)
-
-        print(players_detections)
 
         goalkeepers_detections.class_id = classification_helper.resolve_goalkeepers_team_id(
             players=players_detections, goalkeepers=goalkeepers_detections

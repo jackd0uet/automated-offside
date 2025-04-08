@@ -145,6 +145,7 @@
             } else {
                 detectionPromise = renderDetection();
             }
+
             detectionPromise
                 .then(() => {
                     clearInterval(interval);
@@ -257,8 +258,10 @@
                 runImageDetection(null, false);
             }
             else {
-                console.log('Confidence recalibrated');
                 adjustmentsOffCanvas.hide();
+                detectionContainer.style.display = "none";
+                detectionContainer.classList.remove("show");
+                runDetectionBtn.style.display = "inline-block";
 
                 const formData = new FormData();
                 formData.append("image", imageInput.files[0]);

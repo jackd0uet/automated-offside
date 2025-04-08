@@ -25,10 +25,15 @@ def upload_image(request):
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
         image_file = request.FILES["image"]
+        confidence = 0.5
+
+        if request.FILES.get("confidence"):
+            confidence = request.POST["confidence"]
 
         url = "http://127.0.0.1:8002/object-detection/"
         files = {'image': image_file}
-        response = requests.post(url, files=files)
+        data = {'confidence' : confidence}
+        response = requests.post(url, files=files, data=data)
 
         if response.status_code == 200:
             return HttpResponse(response.content)
