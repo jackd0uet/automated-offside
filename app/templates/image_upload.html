@@ -22,7 +22,7 @@
         </div>
     </form>
 
-    <!-- Detection adjustments menu -->
+    <!-- Detection adjustments menu  (hidden by default)-->
      <div id="adjustmentsMenu" class="offcanvas offcanvas-end fade" tabindex="-1" style="width: 300px;" aria-labelledby="adjustmentsMenuLabel">
         <div class="offcanvas-header">
             <h5 id="adjustmentsMenuLabel">Adjust Detections</h5>
@@ -30,33 +30,33 @@
         </div>
 
         <div class="offcanvas-body">
-            <p>Are you happy to proceed to offside detection or do the detections need adjustment?</p>
-
-            <div class="mb-3">
-                <label class="form-label d-block">Is the goalkeeper on the correct team?</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="goalkeeperCorrect" id="goalkeeperYes" value="yes" checked>
-                    <label class="form-check-label" for="goalkeeperYes">Yes</label>
+            <form id="adjustmentsForm" class="text-center">
+                <div class="mb-3">
+                    <label class="form-label d-block">Is the goalkeeper on the correct team?</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="goalkeeperCorrect" id="goalkeeperYes" value="yes" checked>
+                        <label class="form-check-label" for="goalkeeperYes">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="goalkeeperCorrect" id="goalkeeperNo" value="no">
+                        <label class="form-check-label" for="goalkeeperNo">No</label>
+                    </div>
                 </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="goalkeeperCorrect" id="goalkeeperNo" value="no">
-                    <label class="form-check-label" for="goalkeeperNo">No</label>
+
+                <div class="mb-3">
+                    <label for="confidenceSlider" class="form-label">Confidence Threshold:</label>
+                    <input type="range" class="form-range" id="confidenceSlider" min="0" max="1" step="0.1" value="0.5">
+                    <span id="confidenceValue">0.5</span>
                 </div>
-            </div>
 
-            <div class="mb-3">
-                <label for="confidenceSlider" class="form-label">Confidence Threshold:</label>
-                <input type="range" class="form-range" id="confidenceSlider" min="0" max="1" step="0.1" value="0.5">
-                <span id="confidenceValue">0.5</span>
-            </div>
+                <div class="d-grid gap-2">
+                    <button id="confirmOffsideBtn" type="submit" class="btn btn-primary">Proceed to Offside Detection</button>
+                </div>
 
-            <div class="d-grid gap-2">
-                <button id="confirmOffsideBtn" class="btn btn-primary">Proceed to Offside Detection</button>
-            </div>
-
-            <div class="mt-3 d-grid gap-2">
-                <button id="rerunDetectionBtn" class="btn btn-warning">Rerun Detections</button>
-            </div>
+                <div class="mt-3 d-grid gap-2">
+                    <button id="rerunDetectionBtn" type="submit" class="btn btn-warning">Rerun Detections</button>
+                </div>
+            </form>
         </div>
      </div>
     
@@ -76,17 +76,118 @@
 </div>
 
 <script>
+    const filePickerContainer = document.getElementById("filePickerContainer");
     const imageInput = document.getElementById("imageInput");
     const previewImage = document.getElementById("previewImage");
     const imageContainer = document.getElementById("imageContainer");
+
     const progressContainer = document.getElementById("progressContainer");
     const progressBar = document.getElementById("progressBar");
+
     const detectionContainer = document.getElementById("detectionContainer");
     const resultImage = document.getElementById("resultImage");
-    const filePickerContainer = document.getElementById("filePickerContainer");
+
     const uploadForm = document.getElementById("uploadForm");
     const runDetectionBtn = document.getElementById("runDetectionBtn");
-    const adjustmentsMenu = document.getElementById('adjustmentsMenu');
+
+    const adjustmentsMenu = document.getElementById("adjustmentsMenu");
+    const adjustmentsForm = document.getElementById("adjustmentsForm");
+    const confidenceSlider = document.getElementById("confidenceSlider");
+    const goalkeeperNo = document.getElementById("goalkeeperNo");
+
+    const adjustmentsOffCanvas = new bootstrap.Offcanvas(adjustmentsMenu, {
+                backdrop: false
+            });
+
+    let detectionData = null;
+
+    function runImageDetection(formData, overwriteDetection) {
+        // Show progress bar
+        progressBar.style.width = "0%";
+        progressBar.textContent = "0%";
+        progressContainer.style.display = "block";
+        progressContainer.classList.add("show");
+
+        const interval = setInterval(() => {
+            let width = parseInt(progressBar.style.width);
+            if (width < 95) {
+                width += 5
+                progressBar.style.width = width + "%";
+                progressBar.textContent = width + "%";
+            }
+        }, 500);
+
+        runDetectionBtn.disabled = true;
+        runDetectionBtn.textContent = "Detection in progress...";
+
+        let detectionPromise;
+
+        if (overwriteDetection) {
+            detectionPromise = fetch("{% url 'process_image' %}", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to process image");
+                }
+                return response.json();
+            })
+            .then(data => {
+                detectionData = data;
+                // Send detections to render the pitch
+                return renderDetection();
+            });
+            } else {
+                detectionPromise = renderDetection();
+            }
+            detectionPromise
+                .then(() => {
+                    clearInterval(interval);
+                    progressBar.style.width = "100%";
+                    progressBar.textContent = "100%";
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Error processing image. Please try again.");
+
+                    filePickerContainer.style.display = "block";
+                    runDetectionBtn.disabled = false;
+                    runDetectionBtn.textContent = "Run Detection";
+                })
+                .finally(() => {
+                    clearInterval(interval);
+                    progressContainer.style.display = "none";
+                    progressContainer.classList.remove("show");
+                });
+        
+    }
+
+    function renderDetection() {
+        return fetch("{% url 'render_pitch' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                ball_xy: detectionData.ball_xy,
+                players_xy: detectionData.players_xy,
+                refs_xy: detectionData.refs_xy,
+                players_detections: detectionData.players_detections
+            })
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            const imgUrl = URL.createObjectURL(blob);
+            resultImage.src = imgUrl;
+
+            runDetectionBtn.style.display = "none";
+            detectionContainer.style.display = "block";
+            detectionContainer.classList.add("show");
+
+            adjustmentsOffCanvas.show();
+        });
+}
 
     imageInput.addEventListener("change", function(event) {
         const file = event.target.files[0];
@@ -116,77 +217,43 @@
         const formData = new FormData();
         formData.append("image", imageInput.files[0]);
 
-        // Show progress bar
-        progressBar.style.width = "0%";
-        progressBar.textContent = "0%";
-        progressContainer.style.display = "block";
-        progressContainer.classList.add("show");
-
-        const interval = setInterval(() => {
-            let width = parseInt(progressBar.style.width);
-            if (width < 95) {
-                width += 5
-                progressBar.style.width = width + "%";
-                progressBar.textContent = width + "%";
-            }
-        }, 500);
-
-        runDetectionBtn.disabled = true;
-        runDetectionBtn.textContent = "Detection in progress...";
-
-        fetch("{% url 'process_image' %}", {
-            method: "POST",
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Failed to process image");
-            }
-            return response.json();
-        })
-        .then(data => {
-            clearInterval(interval);
-            progressBar.style.width = "100%";
-            progressBar.textContent = "100%";
-
-            // Send detections to render the pitch
-            return fetch("{% url 'render_pitch' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    ball_xy: data.ball_xy,
-                    players_xy: data.players_xy,
-                    refs_xy: data.refs_xy,
-                    players_detections: data.players_detections
-                })
-            });
-        })
-        .then(response => response.blob())
-        .then(blob => {
-            const imgUrl = URL.createObjectURL(blob);
-            resultImage.src = imgUrl;
-
-            detectionContainer.style.display = "block";
-            detectionContainer.classList.add("show");
-
-            var adjustmentsOffCanvas = new bootstrap.Offcanvas(adjustmentsMenu, {
-                backdrop: false
-            });
-            adjustmentsOffCanvas.show();
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Error processing image. Please try again.");
-            filePickerContainer.style.display = "block";
-        })
-        .finally(() => {
-            clearInterval(interval);
-            progressContainer.style.display = "none";
-            progressContainer.classList.remove("show");
-        });
+        runImageDetection(formData, true);
     });
+
+    adjustmentsForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const confidenceValue = parseFloat(confidenceSlider.value);
+        const isGoalkeeperNo = goalkeeperNo.checked;
+
+        if (confidenceValue == 0.5 && !isGoalkeeperNo) {
+            alert("Please pick a non-default value if you would like to run new detections, otherwise continue to Offside Detection.")
+            return;
+        }
+
+        else if (isGoalkeeperNo) {
+            for (let i = 0; i < detectionData.players_detections.class_name.length; i++) {
+                if (detectionData.players_detections.class_name[i] === 'goalkeeper') { 
+                    // Swap the class_id between 0 and 1
+                    detectionData.players_detections.class_id[i] = (detectionData.players_detections.class_id[i] === 1) ? 0 : 1;
+                }
+            }
+
+            adjustmentsOffCanvas.hide();
+            runImageDetection(null, false);
+        }
+        else {
+            console.log('Confidence recalibrated');
+            adjustmentsOffCanvas.hide();
+
+            const formData = new FormData();
+            formData.append("image", imageInput.files[0]);
+            formData.append("confidence", confidenceSlider.value);
+
+            runImageDetection(formData, true);
+        }
+        
+    })
 
     document.getElementById("confidenceSlider").addEventListener("input", function(event) {
     document.getElementById("confidenceValue").textContent = event.target.value;
