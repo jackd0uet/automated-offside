@@ -71,10 +71,6 @@ class ClassificationHelper():
             goalkeepers_xy = goalkeepers.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
             players_xy = players.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
 
-            print("players_xy shape:", players_xy.shape)
-            print("players.class_id shape:", players.class_id.shape)
-            print("players.class_id:", players.class_id)
-
             # Split players into teams
             team_0_players = players_xy[players.class_id == 0]
             team_1_players = players_xy[players.class_id == 1]

@@ -1,10 +1,9 @@
 import supervision as sv
 
 class OffsideClassification():
-    def __init__(self, players_detections, all_detections):
+    def __init__(self, players_detections):
         self.GOALKEEPER_ID = 1
 
-        self.all_detections = all_detections
         self.players_detections = players_detections
 
         self.attackers, self.defenders = self.__assign_roles()
@@ -24,7 +23,7 @@ class OffsideClassification():
         return (team_1, team_0) if defending_team == 0 else (team_0, team_1)
 
     def __detect_goalkeeper(self):
-        if len(self.all_detections[self.all_detections.class_id == self.GOALKEEPER_ID]) > 0:
+        if len(self.players_detections[self.players_detections.class_id == self.GOALKEEPER_ID]) > 0:
             return True
 
     def __get_second_defender(self, team_xy):
