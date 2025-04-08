@@ -1,6 +1,7 @@
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
 import cv2
 import json
@@ -67,14 +68,24 @@ def render_pitch_view(request):
             logging.error(f"Error rendering pitch: {e}")
             return JsonResponse({"error": str(e)}, status=500)
 
+@csrf_exempt
 def classify_offside(request):
     if request.method == "POST":
         url = "http://127.0.0.1:8002/offside-classification/"
         response = requests.post(url, data=request.body)
 
         if response.status_code == 200:
-            return HttpResponse(response.content)
+            classification_result = response.json()
+
+            request.session['classification_result'] = classification_result
+
+            return redirect(reverse('display_offside'))
         else:
             return JsonResponse({"error": "Failed to determine offside classification"}, status=500)
         
     return JsonResponse({"error": "Only POST requests to this endpoint are permitted"}, status=400)
+
+@csrf_exempt
+def display_offside(request):
+    classification_result = request.session.get('classification_result', None)
+    return render(request, 'offside_decision.html', {'classification_result': classification_result})

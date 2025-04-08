@@ -91,3 +91,25 @@ async def detection(
         del players_detections
         del goalkeepers_detections
         del referees_detections
+
+@app.post("/offside-classification/")
+async def offside_classification(data):
+    print(data)
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        players_detections = {
+            'xyxy': np.array(data['players_detections']['xyxy']),
+            'confidence': np.array(data['players_detections']['confidence']),
+            'class_id': np.array(data['players_detections']['class_id']),
+            'class_name': np.array(data['players_detections']['class_name'])
+        }
+
+        classification_helper = OffsideClassification(players_detections)
+
+        response = classification_helper.classify()
+
+        return JSONResponse(content=response)
+    
+    except Exception as e:
+        logging.error(f"Error during offside classification: {str(e)}")
+        return JSONResponse({"error": f"Failed to determine offside: {str(e)}"}, status_code=500)

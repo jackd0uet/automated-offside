@@ -105,14 +105,16 @@
 
     let detectionData = null;
 
-    function runImageDetection(formData, overwriteDetection) {
+    function startProgressBar() {
         // Show progress bar
         progressBar.style.width = "0%";
         progressBar.textContent = "0%";
         progressContainer.style.display = "block";
         progressContainer.classList.add("show");
 
-        const interval = setInterval(() => {
+        let progress = 0;
+        
+        progressInterval = setInterval(() => {
             let width = parseInt(progressBar.style.width);
             if (width < 95) {
                 width += 5
@@ -120,7 +122,19 @@
                 progressBar.textContent = width + "%";
             }
         }, 500);
+    }
 
+    function stopProgressBar() {
+        clearInterval(progressInterval);
+        progressBar.style.width = "100%";
+        progressBar.textContent = "100%";
+
+        progressContainer.style.display = "none";
+        progressContainer.classList.remove("show");
+    }
+
+    function runImageDetection(formData, overwriteDetection) {
+        startProgressBar();
         runDetectionBtn.disabled = true;
         runDetectionBtn.textContent = "Detection in progress...";
 
@@ -147,11 +161,6 @@
             }
 
             detectionPromise
-                .then(() => {
-                    clearInterval(interval);
-                    progressBar.style.width = "100%";
-                    progressBar.textContent = "100%";
-                })
                 .catch(error => {
                     console.error("Error:", error);
                     alert("Error processing image. Please try again.");
@@ -161,9 +170,8 @@
                     runDetectionBtn.textContent = "Run Detection";
                 })
                 .finally(() => {
-                    clearInterval(interval);
-                    progressContainer.style.display = "none";
-                    progressContainer.classList.remove("show");
+                    stopProgressBar();
+                    
                 });
         
     }
@@ -231,8 +239,26 @@
         const clickedBtn = event.submitter;
 
         if (clickedBtn.id === "confirmOffsideBtn") {
-            // Placeholder
-            console.log("Go to offside");
+            // Another loading bar? perhaps for now
+            startProgressBar();
+
+            runDetectionBtn.disabled = true;
+            runDetectionBtn.textContent = "Offside Classification in progress...";
+
+            fetch("{% url 'classify_offside' %}", {
+                method: "POST",
+                body: detectionData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to process Offside Classification");
+                }
+                return response.json();
+            })
+            .then(data => {
+                stopProgressBar();
+                window.location.href = "{% url 'display_offside' %}"
+            });
         }
         else if (clickedBtn.id === "cancelDetectionBtn") {
             location.reload();
@@ -270,7 +296,6 @@
                 runImageDetection(formData, true);
             }
         }
-
     })
 
     document.getElementById("confidenceSlider").addEventListener("input", function(event) {
