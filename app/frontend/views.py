@@ -26,12 +26,12 @@ def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
         image_file = request.FILES["image"]
 
-        url = "http://127.0.0.1:8002/object_detection/"
+        url = "http://127.0.0.1:8002/object-detection/"
         files = {'image': image_file}
         response = requests.post(url, files=files)
 
         if response.status_code == 200:
-            return HttpResponse(response.content, content_type="image/jpeg")
+            return HttpResponse(response.content)
         else:
             return JsonResponse({"error": "Failed to process image"}, status=500)
         
@@ -63,5 +63,13 @@ def render_pitch_view(request):
             return JsonResponse({"error": str(e)}, status=500)
 
 def classify_offside(request):
-    # TODO: implement call to classify_offside endpoint
-    pass
+    if request.method == "POST":
+        url = "http://127.0.0.1:8002/offside-classification/"
+        response = requests.post(url, data=request.body)
+
+        if response.status_code == 200:
+            return HttpResponse(response.content)
+        else:
+            return JsonResponse({"error": "Failed to determine offside classification"}, status=500)
+        
+    return JsonResponse({"error": "Only POST requests to this endpoint are permitted"}, status=400)
