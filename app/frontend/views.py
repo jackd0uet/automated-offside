@@ -2,6 +2,7 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 
+import base64
 import cv2
 import json
 import logging
@@ -66,7 +67,7 @@ def render_pitch_view(request):
             return HttpResponse(buffer.tobytes(), content_type="image/jpeg")
 
         except Exception as e:
-            logging.error(f"Error rendering pitch: {traceback.format_exc}")
+            logging.error(f"Error rendering pitch: {traceback.format_exc()}")
             return JsonResponse({"error": str(e)}, status=500)
 
 def classify_offside(request):
@@ -101,7 +102,7 @@ def classify_offside(request):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
         except Exception as e:
-            logging.error(f"Something went wrong: {traceback.format_exc}")
+            logging.error(f"Something went wrong: {traceback.format_exc()}")
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Only POST requests to this endpoint are permitted"}, status=400)
@@ -109,21 +110,23 @@ def classify_offside(request):
 def render_offside_view(request):
     classification_result = request.session.get('classification_result', None)
     second_defender = request.session.get('second_defender', None)
-    xyxy = request.session.get('POST_data')
+    data = request.session.get('POST_data')
 
     try:
-
         image = render_offside(
-            xyxy=xyxy,
+            data=data,
             classification_result=classification_result,
             second_defender=second_defender)
         
         _, buffer = cv2.imencode('.jpg', image)
-        request.session['offside_radar_view'] = buffer.tobytes()
+        image_bytes = buffer.tobytes()
+        encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+
+        request.session['offside_radar_view'] = encoded_image
     
     except Exception as e:
-        logging.error(f"Error rendering offside: {traceback.format_exc}")
-        return JsonResponse({"error": f"Failed to render offside: {str(e)}"}, status_code=500)
+        logging.error(f"Error rendering offside: {traceback.format_exc()}")
+        return JsonResponse({"error": f"Failed to render offside: {str(e)}"}, status=500)
 
 def display_offside(request):
     classification_result = request.session.get('classification_result', None)

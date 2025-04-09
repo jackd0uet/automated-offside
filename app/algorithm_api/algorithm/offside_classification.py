@@ -1,4 +1,3 @@
-import logging
 import numpy as np
 import supervision as sv
 
@@ -22,7 +21,7 @@ class OffsideClassification():
             class_id=defenders_dict["class_id"]
         )
 
-        self.offside_status = {}
+        self.offside_objects = {}
 
     def __assign_roles(self):
         class_ids = self.players_detections['class_id']
@@ -75,7 +74,7 @@ class OffsideClassification():
 
     def __setup_offside_status(self):
         for idx in range(len(self.attackers)):
-            self.offside_status[idx] = {"offside": False}
+            self.offside_objects[idx] = {"offside": False}
 
     def classify(self):
         attacking_xy = self.attackers.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
@@ -89,8 +88,8 @@ class OffsideClassification():
 
         for player_pos in attacking_xy:
             if player_pos[0] > second_defender_xy[0]:
-                self.offside_status[player_count]['offside'] = True
-            self.offside_status[player_count]['xyxy'] = player_pos[0]
+                self.offside_objects[player_count]['offside'] = True
+            self.offside_objects[player_count]['xyxy'] = player_pos
             player_count += 1
 
-        return self.offside_status, second_defender_xy
+        return self.offside_objects, second_defender_xy
