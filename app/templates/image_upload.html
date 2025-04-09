@@ -261,15 +261,10 @@
                 },
                 body: JSON.stringify(detectionData)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Failed to process Offside Classification");
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 stopProgressBar();
-                window.location.href = "{% url 'display_offside' %}"
+                window.location.href = data.redirect_url;
             });
         }
         else if (clickedBtn.id === "cancelDetectionBtn") {

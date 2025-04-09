@@ -81,7 +81,9 @@ def classify_offside(request):
             if response.status_code == 200:
                 classification_result = response.json()
                 request.session['classification_result'] = classification_result
-                return redirect(reverse('display_offside'))
+                return JsonResponse({
+                    "redirect_url": reverse('display_offside')
+                })
             else:
                 return JsonResponse({
                     "error": "Failed to determine offside classification",

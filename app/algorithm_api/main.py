@@ -7,6 +7,7 @@ import logging
 import numpy as np
 import os
 import supervision as sv
+import traceback
 
 from algorithm.classification_helper import ClassificationHelper
 from algorithm.key_point_detection import KeyPointDetection
@@ -84,7 +85,7 @@ async def detection(
         return JSONResponse(content=response)
     
     except Exception as e:
-        logging.error(f"Error during image processing: {str(e)}")
+        logging.error(f"Error during image processing: {traceback.format_exc()}")
         return JSONResponse({"error": f"Failed to process image: {str(e)}"}, status_code=500)
 
     finally:
@@ -102,7 +103,7 @@ async def offside_classification(request: Request):
             'xyxy': np.array(data['players_detections']['xyxy']),
             'confidence': np.array(data['players_detections']['confidence']),
             'class_id': np.array(data['players_detections']['class_id']),
-            'class_name': np.array(data['players_detections']['class_name'])
+            'class_name': np.array(data['players_detections']['class_name'], dtype=str),
         }
 
         classification_helper = OffsideClassification(players_detections)
@@ -111,5 +112,5 @@ async def offside_classification(request: Request):
         return JSONResponse(content=response)
     
     except Exception as e:
-        logging.error(f"Error during offside classification: {str(e)}")
+        logging.error(f"Error during offside classification: {traceback.format_exc()}")
         return JSONResponse({"error": f"Failed to determine offside: {str(e)}"}, status_code=500)

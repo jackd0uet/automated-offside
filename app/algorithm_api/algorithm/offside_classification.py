@@ -1,3 +1,5 @@
+import logging
+import numpy as np
 import supervision as sv
 
 class OffsideClassification():
@@ -6,25 +8,55 @@ class OffsideClassification():
 
         self.players_detections = players_detections
 
-        self.attackers, self.defenders = self.__assign_roles()
+        attackers_dict, defenders_dict = self.__assign_roles()
+
+        self.attackers = sv.Detections(
+            xyxy=attackers_dict["xyxy"],
+            confidence=attackers_dict["confidence"],
+            class_id=attackers_dict["class_id"]
+        )
+
+        self.defenders = sv.Detections(
+            xyxy=defenders_dict["xyxy"],
+            confidence=defenders_dict["confidence"],
+            class_id=defenders_dict["class_id"]
+        )
 
         self.offside_status = {}
 
     def __assign_roles(self):
-        team_0 = self.players_detections[self.players_detections.class_id == 0]
-        team_1 = self.players_detections[self.players_detections.class_id == 1]
+        class_ids = self.players_detections['class_id']
+        class_names = self.players_detections['class_name']
 
-        if self.__detect_goalkeeper():
-            defending_team = 0 if len(team_0[team_0.data['class_name'] == 'goalkeeper']) > 0 else 1
-        else:
-            # TODO: Work out fallback behavior if no keeper
+        team_0_indices = np.where(class_ids == 0)[0]
+        team_1_indices = np.where(class_ids == 1)[0]
+        goalkeeper_indices = np.where(np.char.equal(class_names, 'goalkeeper'))[0]
+
+        if goalkeeper_indices == 0:
             return ValueError("No goalkeeper detected, fallback behavior not implemented.")
 
-        return (team_1, team_0) if defending_team == 0 else (team_0, team_1)
+        # For now, assume the first goalkeeper detected is what we are interested in.
+        goalkeeper_index = goalkeeper_indices[0]
+        goalkeeper_team = class_ids[goalkeeper_index]
 
-    def __detect_goalkeeper(self):
-        if len(self.players_detections[self.players_detections.class_id == self.GOALKEEPER_ID]) > 0:
-            return True
+        defending_team = goalkeeper_team
+
+        attacking_indices = team_1_indices if defending_team == 0 else team_0_indices
+        defending_indices = team_0_indices if defending_team == 0 else team_1_indices
+
+        attackers = self.__get_team_detections(attacking_indices)
+        defenders = self.__get_team_detections(defending_indices)
+
+        return attackers, defenders
+
+    # TODO: add to database diagram
+    def __get_team_detections(self, indices):
+        return {
+            "xyxy": self.players_detections["xyxy"][indices],
+            "confidence": self.players_detections["confidence"][indices],
+            "class_id": self.players_detections["class_id"][indices],
+            "class_name": self.players_detections["class_name"][indices],
+        }
 
     def __get_second_defender(self, team_xy):
         highest = [-1, -float('inf')]
@@ -42,7 +74,7 @@ class OffsideClassification():
         return team_xy[second_highest[0]]
 
     def __setup_offside_status(self):
-        for idx in enumerate(self.attackers):
+        for idx in range(len(self.attackers)):
             self.offside_status[idx] = {"offside": False}
 
     def classify(self):
