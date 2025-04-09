@@ -15,6 +15,8 @@ from algorithm.object_detection import ObjectDetection
 from algorithm.offside_classification import OffsideClassification
 from algorithm.visualization_helper import VisualizationHelper
 
+from utils import convert_to_serializable
+
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 app = FastAPI()
@@ -70,6 +72,7 @@ async def detection(
         refs_xy = visualization.transform_points(referees_detections)
 
         # Return processed data
+        # TODO: use convert_to_serializable here
         response = {
             'ball_xy': ball_xy.tolist(),
             'players_xy': players_xy.tolist(),
@@ -107,9 +110,12 @@ async def offside_classification(request: Request):
         }
 
         classification_helper = OffsideClassification(players_detections)
-        response = classification_helper.classify()
+        offside_status, second_defender = classification_helper.classify()
 
-        return JSONResponse(content=response)
+        return JSONResponse(content=convert_to_serializable({
+            "offside_status": offside_status,
+            "second_defender": second_defender
+        }))
     
     except Exception as e:
         logging.error(f"Error during offside classification: {traceback.format_exc()}")

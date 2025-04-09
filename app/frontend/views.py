@@ -1,6 +1,5 @@
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
 from django.urls import reverse
 
 import cv2
@@ -8,8 +7,9 @@ import json
 import logging
 import numpy as np
 import requests
+import traceback
 
-from .utils import render_pitch
+from .utils import render_offside, render_pitch
 
 logging = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ def render_pitch_view(request):
             return HttpResponse(buffer.tobytes(), content_type="image/jpeg")
 
         except Exception as e:
-            logging.error(f"Error rendering pitch: {e}")
+            logging.error(f"Error rendering pitch: {traceback.format_exc}")
             return JsonResponse({"error": str(e)}, status=500)
 
 def classify_offside(request):
@@ -79,11 +79,19 @@ def classify_offside(request):
             response = requests.post(url, json=payload)
 
             if response.status_code == 200:
-                classification_result = response.json()
-                request.session['classification_result'] = classification_result
+                classification_json = response.json()
+
+                request.session['POST_data'] = payload
+
+                request.session['classification_result'] = classification_json['offside_status']
+                request.session['second_defender'] = classification_json['second_defender']
+
+                render_offside_view(request=request)
+
                 return JsonResponse({
                     "redirect_url": reverse('display_offside')
                 })
+
             else:
                 return JsonResponse({
                     "error": "Failed to determine offside classification",
@@ -93,10 +101,40 @@ def classify_offside(request):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
         except Exception as e:
+            logging.error(f"Something went wrong: {traceback.format_exc}")
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Only POST requests to this endpoint are permitted"}, status=400)
 
+def render_offside_view(request):
+    classification_result = request.session.get('classification_result', None)
+    second_defender = request.session.get('second_defender', None)
+    xyxy = request.session.get('POST_data')
+
+    try:
+
+        image = render_offside(
+            xyxy=xyxy,
+            classification_result=classification_result,
+            second_defender=second_defender)
+        
+        _, buffer = cv2.imencode('.jpg', image)
+        request.session['offside_radar_view'] = buffer.tobytes()
+    
+    except Exception as e:
+        logging.error(f"Error rendering offside: {traceback.format_exc}")
+        return JsonResponse({"error": f"Failed to render offside: {str(e)}"}, status_code=500)
+
 def display_offside(request):
     classification_result = request.session.get('classification_result', None)
-    return render(request, 'offside_decision.html', {'classification_result': classification_result})
+    offside_radar_view = request.session.get('offside_radar_view', None)
+
+    return render(
+        request,
+        'offside_decision.html',
+        {
+            'classification_result': classification_result,
+            'offside_radar_view': offside_radar_view
+        }
+    )
+    

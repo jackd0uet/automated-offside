@@ -90,6 +90,7 @@ class OffsideClassification():
         for player_pos in attacking_xy:
             if player_pos[0] > second_defender_xy[0]:
                 self.offside_status[player_count]['offside'] = True
+            self.offside_status[player_count]['xyxy'] = player_pos[0]
             player_count += 1
 
-        return self.offside_status
+        return self.offside_status, second_defender_xy

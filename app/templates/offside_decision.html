@@ -11,6 +11,56 @@
     {% else %}
         <h3>No result available</h3>
     {% endif %}
+
+    <!-- Offside radar view -->
+     <div id="radarContainer" class="mt-5">
+        <h3 class="mt-4 text-center">Radar View</h3>
+        <div class="d-flex justify-content-center">
+            <img id="radarImage" src='{{ offside_radar_view }}' class="img-fluid mt-2 shadow" style="max-width: 700px;">
+        </div>
+     </div>
+
+    <!-- Offside decision override menu -->
+     <div id="overrideMenu" class="offcanvas-end fade" tabindex="-1" style="width: 300px" aria-labelledby="overrideMenuLabel">
+        <div class="offcanvas-header">
+            <h5 id="overrideMenuLabel">Override Menu</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+        </div>
+
+        <div class="offcanvas-body">
+            <form id="overrideForm" class="text-center">
+                <div class="mb-3">
+                    <label class="form-label d-block">Is the decision correct?</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="decisionCorrect" id="decisionYes" value="yes" checked>
+                        <label class="form-check-label" for="decisionYes">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="decisionCorrect" id="decisionNo" value="no">
+                        <label class="form-check-label" for="decisionNo">No</label>
+                    </div>
+                </div>
+                <!-- TODO: add ability to select individual players as offside or onside -->
+            </form>
+        </div>
+
+     </div>
 </div>
+
+<script>
+    const csrftoken = Cookies.get('csrftoken');
+
+    const radarContainer = document.getElementById("radarContainer");
+    const radarImage = document.getElementById("radarImage");
+
+    const overrideMenu = document.getElementById("overrideMenu");
+    const overrideForm = document.getElementById("overrideForm");
+    const decisionNo = document.getElementById("decisionNo");
+
+    const overrideOffCanvas =  new bootstrap.OffCanvas(overrideMenu, {
+        backdrop: false
+    });
+    // TODO: Logic for offCanvas
+</script>
 
 {% endblock %}
