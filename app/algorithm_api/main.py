@@ -1,6 +1,6 @@
 import cv2
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.responses import JSONResponse
 import json
 import logging
@@ -93,10 +93,11 @@ async def detection(
         del referees_detections
 
 @app.post("/offside-classification/")
-async def offside_classification(data):
-    print(data)
+async def offside_classification(request: Request):
     try:
-        data = json.loads(request.body.decode("utf-8"))
+        data = await request.body()
+        data = json.loads(data.decode("utf-8"))
+
         players_detections = {
             'xyxy': np.array(data['players_detections']['xyxy']),
             'confidence': np.array(data['players_detections']['confidence']),
@@ -105,7 +106,6 @@ async def offside_classification(data):
         }
 
         classification_helper = OffsideClassification(players_detections)
-
         response = classification_helper.classify()
 
         return JSONResponse(content=response)

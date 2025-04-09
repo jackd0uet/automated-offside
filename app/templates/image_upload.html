@@ -79,7 +79,11 @@
     </div>
 </div>
 
+{% csrf_token %}
+
 <script>
+    const csrftoken = Cookies.get('csrftoken');
+
     const filePickerContainer = document.getElementById("filePickerContainer");
     const imageInput = document.getElementById("imageInput");
     const previewImage = document.getElementById("previewImage");
@@ -143,6 +147,9 @@
         if (overwriteDetection) {
             detectionPromise = fetch("{% url 'process_image' %}", {
                 method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken
+                },
                 body: formData
             })
             .then(response => {
@@ -180,7 +187,8 @@
         return fetch("{% url 'render_pitch' %}", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
             },
             body: JSON.stringify({
                 ball_xy: detectionData.ball_xy,
@@ -247,7 +255,11 @@
 
             fetch("{% url 'classify_offside' %}", {
                 method: "POST",
-                body: detectionData
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken
+                },
+                body: JSON.stringify(detectionData)
             })
             .then(response => {
                 if (!response.ok) {

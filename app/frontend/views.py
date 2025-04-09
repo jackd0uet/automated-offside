@@ -22,7 +22,6 @@ def login(request):
 def upload_image(request):
     return render(request, "image_upload.html")
 
-@csrf_exempt
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
         image_file = request.FILES["image"]
@@ -39,11 +38,13 @@ def process_image(request):
         if response.status_code == 200:
             return HttpResponse(response.content)
         else:
-            return JsonResponse({"error": "Failed to process image"}, status=500)
+            return JsonResponse({
+                "error": "Failed to process image",
+                "details": response.text
+            }, status=500)
         
     return JsonResponse({"error": "No image provided"}, status=400)
 
-@csrf_exempt
 def render_pitch_view(request):
     if request.method == "POST":
         try:
@@ -68,24 +69,32 @@ def render_pitch_view(request):
             logging.error(f"Error rendering pitch: {e}")
             return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
 def classify_offside(request):
     if request.method == "POST":
         url = "http://127.0.0.1:8002/offside-classification/"
-        response = requests.post(url, data=request.body)
 
-        if response.status_code == 200:
-            classification_result = response.json()
+        try:
+            payload = json.loads(request.body)
 
-            request.session['classification_result'] = classification_result
+            response = requests.post(url, json=payload)
 
-            return redirect(reverse('display_offside'))
-        else:
-            return JsonResponse({"error": "Failed to determine offside classification"}, status=500)
-        
+            if response.status_code == 200:
+                classification_result = response.json()
+                request.session['classification_result'] = classification_result
+                return redirect(reverse('display_offside'))
+            else:
+                return JsonResponse({
+                    "error": "Failed to determine offside classification",
+                    "details": response.text
+                }, status=500)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
     return JsonResponse({"error": "Only POST requests to this endpoint are permitted"}, status=400)
 
-@csrf_exempt
 def display_offside(request):
     classification_result = request.session.get('classification_result', None)
     return render(request, 'offside_decision.html', {'classification_result': classification_result})
