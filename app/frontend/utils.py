@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 from sports.annotators.soccer import (
     draw_pitch,
@@ -8,8 +9,32 @@ import supervision as sv
 
 config = SoccerPitchConfiguration()
 
+def draw_legend(image, legend):
+    # TODO: move legend to other side if players are taking up the space
+    x_start, y_start = 300, 100
+    spacing =  50
+    radius = 10
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.8
+    thickness = 2
+
+    for i, (label, colour) in enumerate(legend):
+        centre = (x_start, y_start + i * spacing)
+        cv2.circle(image, centre, radius, colour.as_bgr(), -1)
+        cv2.putText(
+            image,
+            label,
+            (centre[0] + 20, centre[1] + 7),
+            font,
+            font_scale,
+            (0, 0, 0),
+            thickness,
+            lineType=cv2.LINE_AA
+        )
+
+    return image
+
 def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
-    # TODO: add legend
     annotated_image = draw_pitch(config)
 
     annotated_image = draw_points_on_pitch(
@@ -45,10 +70,18 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
         radius=16,
         pitch=annotated_image)
 
+    legend = [
+        ('Ball', sv.Color.WHITE),
+        ('Team A', sv.Color.from_hex('00BFFF')),
+        ('Team B', sv.Color.from_hex('FF1493')),
+        ('Referee', sv.Color.from_hex('FFD700')),
+    ]
+
+    annotated_image = draw_legend(annotated_image, legend)
+
     return annotated_image
 
 def render_offside(ball_xy, players_xy, refs_xy, classification_result):
-    # TODO: add legend
     defenders_xy, offside_xy, onside_xy = get_plottables(classification_result, players_xy)
     annotated_image = draw_pitch(config)
 
@@ -72,7 +105,7 @@ def render_offside(ball_xy, players_xy, refs_xy, classification_result):
     annotated_image = draw_points_on_pitch(
         config=config,
         xy=offside_xy,
-        face_color=sv.Color.from_hex("FF0000"),
+        face_color=sv.Color.from_hex('FF0000'),
         edge_color=sv.Color.BLACK,
         radius=16,
         pitch=annotated_image
@@ -80,7 +113,7 @@ def render_offside(ball_xy, players_xy, refs_xy, classification_result):
     annotated_image = draw_points_on_pitch(
         config=config,
         xy=onside_xy,
-        face_color=sv.Color.from_hex("00FF00"),
+        face_color=sv.Color.from_hex('00FF00'),
         edge_color=sv.Color.BLACK,
         radius=16,
         pitch=annotated_image
@@ -93,6 +126,16 @@ def render_offside(ball_xy, players_xy, refs_xy, classification_result):
         edge_color=sv.Color.BLACK,
         radius=16,
         pitch=annotated_image)
+
+    legend = [
+        ('Ball', sv.Color.WHITE),
+        ('Defending Team', sv.Color.from_hex('00BFFF')),
+        ('Attacking Team (OFFSIDE)', sv.Color.from_hex('FF0000')),
+        ('Attacking Team (ONSIDE)', sv.Color.from_hex('00FF00')),
+        ('Referee', sv.Color.from_hex('FFD700')),
+    ]
+
+    annotated_image = draw_legend(annotated_image, legend)
 
     return annotated_image
 
