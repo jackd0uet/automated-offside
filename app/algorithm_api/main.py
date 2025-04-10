@@ -116,6 +116,7 @@ async def offside_classification(request: Request):
             'xyxy': np.array(data['players_detections']['xyxy']),
             'confidence': np.array(data['players_detections']['confidence']),
             'class_id': np.array(data['players_detections']['class_id']),
+            'tracker_id': np.array(data['players_detections']['tracker_id']),
             'class_name': np.array(data['players_detections']['class_name'], dtype=str),
         }
 
@@ -123,8 +124,10 @@ async def offside_classification(request: Request):
         offside_status, second_defender = classification_helper.classify()
 
         return JSONResponse(content=convert_to_serializable({
-            "offside_status": offside_status,
-            "second_defender": second_defender
+            'offside_status': offside_status,
+            'second_defender': {
+                'tracker_id': second_defender,
+            }
         }))
     
     except Exception as e:

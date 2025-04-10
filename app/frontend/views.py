@@ -6,11 +6,10 @@ import base64
 import cv2
 import json
 import logging
-import numpy as np
 import requests
 import traceback
 
-from .utils import render_offside, render_pitch
+from .utils import render_offside, render_pitch, format_json
 
 logging = logging.getLogger(__name__)
 
@@ -51,28 +50,7 @@ def render_pitch_view(request):
         try:
             data = json.loads(request.body.decode("utf-8"))
 
-            ball_xy = {
-                'tracker_id': np.array(data['ball_xy']['tracker_id']),
-                'xy': np.array(data['ball_xy']['xy']),
-            }
-
-            players_xy = {
-                'tracker_id': np.array(data['players_xy']['tracker_id']),
-                'xy': np.array(data['players_xy']['xy']),
-            }
-
-            refs_xy = {
-                'tracker_id': np.array(data['refs_xy']['tracker_id']),
-                'xy': np.array(data['refs_xy']['xy']),
-            }
-
-            players_detections = {
-                'xyxy': np.array(data['players_detections']['xyxy']),
-                'confidence': np.array(data['players_detections']['confidence']),
-                'class_id': np.array(data['players_detections']['class_id']),
-                'tracker_id': np.array(data['players_detections']['tracker_id']),
-                'class_name': np.array(data['players_detections']['class_name'])
-            }
+            ball_xy, players_xy, refs_xy, players_detections = format_json(data)
 
             image = render_pitch(ball_xy, players_xy, refs_xy, players_detections)
 
@@ -121,15 +99,21 @@ def classify_offside(request):
     return JsonResponse({'error': "Only POST requests to this endpoint are permitted"}, status=400)
 
 def render_offside_view(request):
-    classification_result = request.session.get('classification_result', None)
-    second_defender = request.session.get('second_defender', None)
-    data = request.session.get('POST_data')
-
     try:
+        classification_result = request.session.get('classification_result', None)
+        second_defender = request.session.get('second_defender', None)
+        data = request.session.get('POST_data')
+
+        ball_xy, players_xy, refs_xy, players_detections = format_json(data)
+
         image = render_offside(
-            data=data,
-            classification_result=classification_result,
-            second_defender=second_defender)
+            ball_xy,
+            players_xy,
+            refs_xy,
+            players_detections,
+            classification_result,
+            second_defender
+        )
         
         _, buffer = cv2.imencode('.jpg', image)
         image_bytes = buffer.tobytes()
@@ -153,4 +137,3 @@ def display_offside(request):
             'offside_radar_view': offside_radar_view
         }
     )
-    

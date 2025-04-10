@@ -10,15 +10,17 @@ class OffsideClassification():
         attackers_dict, defenders_dict = self.__assign_roles()
 
         self.attackers = sv.Detections(
-            xyxy=attackers_dict["xyxy"],
-            confidence=attackers_dict["confidence"],
-            class_id=attackers_dict["class_id"]
+            xyxy=attackers_dict['xyxy'],
+            confidence=attackers_dict['confidence'],
+            class_id=attackers_dict['class_id'],
+            tracker_id=attackers_dict['tracker_id']
         )
 
         self.defenders = sv.Detections(
-            xyxy=defenders_dict["xyxy"],
-            confidence=defenders_dict["confidence"],
-            class_id=defenders_dict["class_id"]
+            xyxy=defenders_dict['xyxy'],
+            confidence=defenders_dict['confidence'],
+            class_id=defenders_dict['class_id'],
+            tracker_id=defenders_dict['tracker_id'],
         )
 
         self.offside_objects = {}
@@ -51,10 +53,11 @@ class OffsideClassification():
     # TODO: add to database diagram
     def __get_team_detections(self, indices):
         return {
-            "xyxy": self.players_detections["xyxy"][indices],
-            "confidence": self.players_detections["confidence"][indices],
-            "class_id": self.players_detections["class_id"][indices],
-            "class_name": self.players_detections["class_name"][indices],
+            'xyxy': self.players_detections['xyxy'][indices],
+            'confidence': self.players_detections['confidence'][indices],
+            'class_id': self.players_detections['class_id'][indices],
+            'tracker_id' : self.players_detections['tracker_id'][indices],
+            'class_name': self.players_detections['class_name'][indices],
         }
 
     def __get_second_defender(self, team_xy):
@@ -70,17 +73,18 @@ class OffsideClassification():
             elif x_value > second_highest[1] and x_value != highest[1]:
                 second_highest = [i, x_value]
 
-        return team_xy[second_highest[0]]
+        return second_highest[0], team_xy[second_highest[0]]
 
     def __setup_offside_status(self):
         for idx in range(len(self.attackers)):
-            self.offside_objects[idx] = {"offside": False}
+            self.offside_objects[idx] = {'offside': False}
 
     def classify(self):
         attacking_xy = self.attackers.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
         defending_xy = self.defenders.get_anchors_coordinates(sv.Position.BOTTOM_CENTER)
 
-        second_defender_xy = self.__get_second_defender(defending_xy)
+        second_defender_index, second_defender_xy = self.__get_second_defender(defending_xy)
+        second_defender_id = self.defenders.tracker_id[second_defender_index]
 
         self.__setup_offside_status()
 
@@ -89,7 +93,7 @@ class OffsideClassification():
         for player_pos in attacking_xy:
             if player_pos[0] > second_defender_xy[0]:
                 self.offside_objects[player_count]['offside'] = True
-            self.offside_objects[player_count]['xyxy'] = player_pos
+            self.offside_objects[player_count]['tracker_id'] = self.attackers.tracker_id[player_count]
             player_count += 1
 
-        return self.offside_objects, second_defender_xy
+        return self.offside_objects, second_defender_id

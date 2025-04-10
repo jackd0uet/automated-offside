@@ -1,3 +1,4 @@
+import numpy as np
 from sports.annotators.soccer import (
     draw_paths_on_pitch,
     draw_pitch,
@@ -9,6 +10,7 @@ import supervision as sv
 config = SoccerPitchConfiguration()
 
 def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
+    # TODO: add legend
     annotated_image = draw_pitch(config)
 
     annotated_image = draw_points_on_pitch(
@@ -46,37 +48,108 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
 
     return annotated_image
 
-def render_offside(xyxy, classification_result, second_defender):
-    offside_line = [[second_defender[0], config.width], [second_defender[0], 0]]
+def render_offside(ball_xy, players_xy, refs_xy, players_detections, classification_result, second_defender):
+    # TODO: add legend
+    # TODO: implement getting transformed xy using second_defender['tracker_id']
+    # offside_line = [[second_defender[0], config.width], [second_defender[0], 0]]
 
-    annotated_image = render_pitch(
-        xyxy['ball_xy'],
-        xyxy['players_xy'],
-        xyxy['refs_xy'],
-        xyxy['players_detections']
+    defenders_xy, offside_xy, onside_xy = get_plottables(classification_result, players_xy)
+    annotated_image = draw_pitch(config)
+
+    annotated_image = draw_points_on_pitch(
+        config=config,
+        xy=ball_xy['xy'],
+        face_color=sv.Color.WHITE,
+        edge_color=sv.Color.BLACK,
+        radius=10,
+        pitch=annotated_image
     )
 
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=classification_result[["xyxy"]["offside"] == True],
+        xy=defenders_xy,
+        face_color=sv.Color.from_hex('00BFFF'),
+        edge_color=sv.Color.BLACK,
+        radius=16,
+        pitch=annotated_image)
+
+    annotated_image = draw_points_on_pitch(
+        config=config,
+        xy=offside_xy,
         face_color=sv.Color.from_hex("FF0000"),
-        edge_color=sv.Color.WHITE,
+        edge_color=sv.Color.BLACK,
         radius=16,
         pitch=annotated_image
     )
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=classification_result[["xyxy"]["offside"] == False],
+        xy=onside_xy,
         face_color=sv.Color.from_hex("00FF00"),
-        edge_color=sv.Color.WHITE,
+        edge_color=sv.Color.BLACK,
         radius=16,
         pitch=annotated_image
     )
 
-    annotated_image = draw_paths_on_pitch(
+    annotated_image = draw_points_on_pitch(
         config=config,
-        paths=offside_line,
-        pitch=annotated_image
-    )
+        xy=refs_xy['xy'],
+        face_color=sv.Color.from_hex('FFD700'),
+        edge_color=sv.Color.BLACK,
+        radius=16,
+        pitch=annotated_image)
+
+    # annotated_image = draw_paths_on_pitch(
+    #     config=config,
+    #     paths=offside_line,
+    #     pitch=annotated_image
+    # )
 
     return annotated_image
+
+
+def get_plottables(classification_result, players_xy):
+    # Remove attackers from initial plot
+    remove_ids = {player['tracker_id'] for player in classification_result.values()}
+
+    tracker_ids = players_xy['tracker_id']
+    xy_coords = players_xy['xy']
+
+    defenders_xy = xy_coords[~np.isin(tracker_ids, list(remove_ids))]
+    attackers_xy = xy_coords[np.isin(tracker_ids, list(remove_ids))]
+
+    attackers_tracker_ids = tracker_ids[np.isin(tracker_ids, list(remove_ids))]
+
+    offside_lookup = {player['tracker_id']: player['offside'] for player in classification_result.values()}
+
+    offside_mask = np.array([offside_lookup.get(tid, False) for tid in attackers_tracker_ids])
+
+    offside_xy = attackers_xy[offside_mask]
+    onside_xy = attackers_xy[~offside_mask]
+
+    return defenders_xy, offside_xy, onside_xy
+
+def format_json(data):
+    ball_xy = {
+                'tracker_id': np.array(data['ball_xy']['tracker_id']),
+                'xy': np.array(data['ball_xy']['xy']),
+            }
+
+    players_xy = {
+        'tracker_id': np.array(data['players_xy']['tracker_id']),
+        'xy': np.array(data['players_xy']['xy']),
+    }
+
+    refs_xy = {
+        'tracker_id': np.array(data['refs_xy']['tracker_id']),
+        'xy': np.array(data['refs_xy']['xy']),
+    }
+
+    players_detections = {
+        'xyxy': np.array(data['players_detections']['xyxy']),
+        'confidence': np.array(data['players_detections']['confidence']),
+        'class_id': np.array(data['players_detections']['class_id']),
+        'tracker_id': np.array(data['players_detections']['tracker_id']),
+        'class_name': np.array(data['players_detections']['class_name'])
+    }
+
+    return ball_xy, players_xy, refs_xy, players_detections
