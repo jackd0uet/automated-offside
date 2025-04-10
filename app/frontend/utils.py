@@ -13,7 +13,7 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
 
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=ball_xy,
+        xy=ball_xy['xy'],
         face_color=sv.Color.WHITE,
         edge_color=sv.Color.BLACK,
         radius=10,
@@ -22,7 +22,7 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
 
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=players_xy[players_detections['class_id'] == 0],
+        xy=players_xy['xy'][players_detections['class_id'] == 0],
         face_color=sv.Color.from_hex('00BFFF'),
         edge_color=sv.Color.BLACK,
         radius=16,
@@ -30,7 +30,7 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
 
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=players_xy[players_detections['class_id'] == 1],
+        xy=players_xy['xy'][players_detections['class_id'] == 1],
         face_color=sv.Color.from_hex('FF1493'),
         edge_color=sv.Color.BLACK,
         radius=16,
@@ -38,7 +38,7 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
 
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=refs_xy,
+        xy=refs_xy['xy'],
         face_color=sv.Color.from_hex('FFD700'),
         edge_color=sv.Color.BLACK,
         radius=16,

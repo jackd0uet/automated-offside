@@ -25,11 +25,11 @@ def upload_image(request):
 
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
-        image_file = request.FILES["image"]
+        image_file = request.FILES['image']
         confidence = 0.5
 
         if request.FILES.get("confidence"):
-            confidence = request.POST["confidence"]
+            confidence = request.POST['confidence']
 
         url = "http://127.0.0.1:8002/object-detection/"
         files = {'image': image_file}
@@ -51,24 +51,37 @@ def render_pitch_view(request):
         try:
             data = json.loads(request.body.decode("utf-8"))
 
-            ball_xy = np.array(data["ball_xy"])
-            players_xy = np.array(data["players_xy"])
-            refs_xy = np.array(data["refs_xy"])
+            ball_xy = {
+                'tracker_id': np.array(data['ball_xy']['tracker_id']),
+                'xy': np.array(data['ball_xy']['xy']),
+            }
+
+            players_xy = {
+                'tracker_id': np.array(data['players_xy']['tracker_id']),
+                'xy': np.array(data['players_xy']['xy']),
+            }
+
+            refs_xy = {
+                'tracker_id': np.array(data['refs_xy']['tracker_id']),
+                'xy': np.array(data['refs_xy']['xy']),
+            }
+
             players_detections = {
                 'xyxy': np.array(data['players_detections']['xyxy']),
                 'confidence': np.array(data['players_detections']['confidence']),
                 'class_id': np.array(data['players_detections']['class_id']),
+                'tracker_id': np.array(data['players_detections']['tracker_id']),
                 'class_name': np.array(data['players_detections']['class_name'])
             }
 
             image = render_pitch(ball_xy, players_xy, refs_xy, players_detections)
 
             _, buffer = cv2.imencode('.jpg', image)
-            return HttpResponse(buffer.tobytes(), content_type="image/jpeg")
+            return HttpResponse(buffer.tobytes(), content_type='image/jpeg')
 
         except Exception as e:
             logging.error(f"Error rendering pitch: {traceback.format_exc()}")
-            return JsonResponse({"error": str(e)}, status=500)
+            return JsonResponse({'error': str(e)}, status=500)
 
 def classify_offside(request):
     if request.method == "POST":
@@ -100,12 +113,12 @@ def classify_offside(request):
                 }, status=500)
 
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
+            return JsonResponse({'error': "Invalid JSON in request body"}, status=400)
         except Exception as e:
             logging.error(f"Something went wrong: {traceback.format_exc()}")
             return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse({"error": "Only POST requests to this endpoint are permitted"}, status=400)
+    return JsonResponse({'error': "Only POST requests to this endpoint are permitted"}, status=400)
 
 def render_offside_view(request):
     classification_result = request.session.get('classification_result', None)
@@ -126,7 +139,7 @@ def render_offside_view(request):
     
     except Exception as e:
         logging.error(f"Error rendering offside: {traceback.format_exc()}")
-        return JsonResponse({"error": f"Failed to render offside: {str(e)}"}, status=500)
+        return JsonResponse({'error': f"Failed to render offside: {str(e)}"}, status=500)
 
 def display_offside(request):
     classification_result = request.session.get('classification_result', None)

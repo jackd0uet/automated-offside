@@ -74,13 +74,23 @@ async def detection(
         # Return processed data
         # TODO: use convert_to_serializable here
         response = {
-            'ball_xy': ball_xy.tolist(),
-            'players_xy': players_xy.tolist(),
-            'refs_xy': refs_xy.tolist(),
+            'ball_xy': {
+                "tracker_id": ball_detections.tracker_id.tolist(),
+                "xy": ball_xy.tolist(),
+            },
+            'players_xy': {
+                "tracker_id": players_detections.tracker_id.tolist(),
+                "xy": players_xy.tolist(),
+            },
+            'refs_xy': {
+                "tracker_id" : referees_detections.tracker_id.tolist(),
+                "xy": refs_xy.tolist(),
+            },
             'players_detections': {
                 "xyxy": players_detections.xyxy.tolist(),
                 "confidence": players_detections.confidence.tolist(),
                 "class_id": players_detections.class_id.tolist(),
+                "tracker_id": players_detections.tracker_id.tolist(),
                 "class_name": players_detections.data["class_name"].tolist(),
             }
         }

@@ -1,3 +1,4 @@
+import numpy as np
 import supervision as sv
 from ultralytics import YOLO
 
@@ -16,7 +17,15 @@ class ObjectDetection():
     def __base_detector(self, image, model):
         result = model(image)[0]
 
-        return sv.Detections.from_ultralytics(result)
+        detections = sv.Detections.from_ultralytics(result)
+
+        num_detections = detections.xyxy.shape[0]
+
+        unique_ids = np.arange(num_detections)
+
+        detections.tracker_id = unique_ids
+
+        return detections
 
     def detect_all(self, image):
         detections = self.__base_detector(image=image, model=self.base_model)
