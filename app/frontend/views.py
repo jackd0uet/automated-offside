@@ -100,10 +100,9 @@ def classify_offside(request):
 def render_offside_view(request):
     try:
         classification_result = request.session.get('classification_result', None)
-        second_defender = request.session.get('second_defender', None)
         data = request.session.get('POST_data')
 
-        ball_xy, players_xy, refs_xy, players_detections = format_json(data)
+        ball_xy, players_xy, refs_xy, _ = format_json(data)
 
         image = render_offside(
             ball_xy,
@@ -126,11 +125,16 @@ def display_offside(request):
     classification_result = request.session.get('classification_result', None)
     offside_radar_view = request.session.get('offside_radar_view', None)
 
+    offside_count = sum(1 for player in classification_result.values() if player['offside'])
+
+    algorithm_decision = "Offside" if offside_count > 0 else "Onside"
+
     return render(
         request,
         'offside_decision.html',
         {
             'classification_result': classification_result,
+            'algorithm_decision': algorithm_decision,
             'offside_radar_view': offside_radar_view
         }
     )

@@ -1,6 +1,5 @@
 import numpy as np
 from sports.annotators.soccer import (
-    draw_paths_on_pitch,
     draw_pitch,
     draw_points_on_pitch
 )
