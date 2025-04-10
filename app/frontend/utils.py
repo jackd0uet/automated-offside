@@ -48,11 +48,8 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
 
     return annotated_image
 
-def render_offside(ball_xy, players_xy, refs_xy, players_detections, classification_result, second_defender):
+def render_offside(ball_xy, players_xy, refs_xy, classification_result):
     # TODO: add legend
-    # TODO: implement getting transformed xy using second_defender['tracker_id']
-    # offside_line = [[second_defender[0], config.width], [second_defender[0], 0]]
-
     defenders_xy, offside_xy, onside_xy = get_plottables(classification_result, players_xy)
     annotated_image = draw_pitch(config)
 
@@ -98,31 +95,28 @@ def render_offside(ball_xy, players_xy, refs_xy, players_detections, classificat
         radius=16,
         pitch=annotated_image)
 
-    # annotated_image = draw_paths_on_pitch(
-    #     config=config,
-    #     paths=offside_line,
-    #     pitch=annotated_image
-    # )
-
     return annotated_image
 
 
 def get_plottables(classification_result, players_xy):
-    # Remove attackers from initial plot
+    # Get tracker IDs for attacking players
     remove_ids = {player['tracker_id'] for player in classification_result.values()}
 
     tracker_ids = players_xy['tracker_id']
     xy_coords = players_xy['xy']
 
+    # Split XYs into defenders and attackers based on tracker IDs
     defenders_xy = xy_coords[~np.isin(tracker_ids, list(remove_ids))]
     attackers_xy = xy_coords[np.isin(tracker_ids, list(remove_ids))]
 
+    # Get the attackers tracker IDs
     attackers_tracker_ids = tracker_ids[np.isin(tracker_ids, list(remove_ids))]
 
+    # Find the players who are considered offside and create a mask for them
     offside_lookup = {player['tracker_id']: player['offside'] for player in classification_result.values()}
-
     offside_mask = np.array([offside_lookup.get(tid, False) for tid in attackers_tracker_ids])
 
+    # Split attackers into onside and offside for plotting
     offside_xy = attackers_xy[offside_mask]
     onside_xy = attackers_xy[~offside_mask]
 

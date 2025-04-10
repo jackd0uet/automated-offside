@@ -74,7 +74,6 @@ def classify_offside(request):
                 classification_json = response.json()
 
                 request.session['POST_data'] = payload
-
                 request.session['classification_result'] = classification_json['offside_status']
                 request.session['second_defender'] = classification_json['second_defender']
 
@@ -110,9 +109,7 @@ def render_offside_view(request):
             ball_xy,
             players_xy,
             refs_xy,
-            players_detections,
-            classification_result,
-            second_defender
+            classification_result
         )
         
         _, buffer = cv2.imencode('.jpg', image)
