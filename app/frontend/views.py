@@ -9,6 +9,7 @@ import logging
 import requests
 import traceback
 
+from .models import OffsideDecision, ObjectDetection
 from .utils import render_offside, render_pitch, format_json
 
 logging = logging.getLogger(__name__)
@@ -36,6 +37,15 @@ def process_image(request):
         response = requests.post(url, files=files, data=data)
 
         if response.status_code == 200:
+            response_data = response.json()
+
+            ObjectDetection.objects.create(
+                players_detections=json.dumps(response_data['players_detections']),
+                players_xy=json.dumps(response_data['players_xy']),
+                ball_xy=json.dumps(response_data['ball_xy']),
+                refs_xy=json.dumps(response_data['refs_xy']),
+                file_path=json.dumps(response_data['file_path'])
+            )
             return HttpResponse(response.content)
         else:
             return JsonResponse({
