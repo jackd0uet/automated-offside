@@ -13,6 +13,8 @@ jobs:
       ROBOFLOW_API_KEY: ${{ secrets.ROBOFLOW_API_KEY }}
       DEBUG: "True"
       TESTING: "True"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
 
     runs-on: ubuntu-latest
     strategy:
@@ -47,6 +49,7 @@ jobs:
       env:
           MYSQL_DATABASE: offside_db
           MYSQL_ROOT_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          MYSQL_HOST: mysql
       run: |
         cd app
         python manage.py migrate
