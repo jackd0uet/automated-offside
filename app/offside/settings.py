@@ -83,7 +83,7 @@ DATABASES = {
         "NAME": "offside_db",
         "USER": os.environ.get("SQL_USER", "root"),
         "PASSWORD": os.environ.get("SQL_PASSWORD"),
-        "HOST": os.environ.get("MYSQL_HOST", "mysql"),
+        "HOST": os.environ.get("MYSQL_HOST", "localhost"),
         "PORT": os.environ.get("MYSQL_PORT", 3306),
     }
 }

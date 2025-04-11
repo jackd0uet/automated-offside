@@ -45,7 +45,7 @@ jobs:
       env:
           SQL_USER: root
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
-          MYSQL_HOST: mysql
+          MYSQL_HOST: 127.0.0.1
       run: |
         cd app
         python manage.py migrate
