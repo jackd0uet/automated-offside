@@ -1,5 +1,7 @@
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth.forms import AuthenticationForm
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 
 import base64
@@ -18,8 +20,18 @@ logging = logging.getLogger(__name__)
 def index(request):
     return render(request, "index.html")
 
-def login(request):
-    return render(request, "login.html")
+def login_view(request):
+    if request.method == "POST":
+
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            return redirect(request.POST.get("next") or "index")
+    else:
+        form = AuthenticationForm(request)
+
+    return render(request, "login.html", {"form": form, "next": request.GET.get("next", "")})
 
 def upload_image(request):
     return render(request, "image_upload.html")

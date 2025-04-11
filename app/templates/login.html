@@ -1,35 +1,50 @@
 {% extends "base_generic.html" %}
-
-{% block content %}
 {% load widget_tweaks %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            Incorrect username or password. Please try again.
+                        </div>
+                    {% endif %}
 
-    {% if form.errors %}
-        <h1> You have entered an incorrect username or password. Please try again.</h1>
-    {% endif %}
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                            <div class="alert alert-warning" role="alert">
+                                Access Denied. Please log in with an account with higher privileges.
+                            </div>
+                        {% endif %}
+                    {% endif %}
 
-    {% if next %}
-        {% if user.is_authenticated %}
-            <h1> Access Denied. Please login with an account with higher privileges.</h1>
-        {% else %}
-            <h1>Login</h1>
-        {% endif %}
-    {% endif %}
+                    <h2 class="text-center mb-4">Login</h2>
 
-    <form method="post" action="{% url 'login' %}">
-        {% csrf_token %}
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
 
-        <div class="form-group">
-            <label for="id_username">{{ form.username.label }}</label>
-            {% render_field form.username class="form-control" %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">{{ form.username.label }}</label>
+                            {% render_field form.username class="form-control" placeholder="Enter your username" %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">{{ form.password.label }}</label>
+                            {% render_field form.password class="form-control" placeholder="Enter your password" %}
+                        </div>
+
+                        <input type="hidden" name="next" value="{{ next }}">
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label for="id_password">{{ form.password.label }}</label>
-            {% render_field form.password class="form-control" %}
-        </div>
-
-        <button type="submit" class="btn btn-primary mt-2 mb-2">Login</button>
-        <input type="hidden" name="next" value="{{ next }}">
-    </form>
+    </div>
+</div>
 
 {% endblock %}
