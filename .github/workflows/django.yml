@@ -60,7 +60,7 @@ jobs:
           DEBUG: 1
       run: |
         cd app
-        coverage run --rcfile ./config/.coveragerc --data-file=.coverage.frontend manage.py test frontend
+        coverage run --rcfile ../config/.coveragerc --data-file=.coverage.frontend manage.py test frontend
         cd ../
 
     - name: Run API Tests
@@ -72,7 +72,7 @@ jobs:
           DEBUG: 1
       run: |
         cd app/algorithm_api
-        coverage run --rcfile ./config/.coveragerc --data-file=.coverage.api pytest
+        coverage run --rcfile ../../config/.coveragerc --data-file=.coverage.api pytest
         cd ../../
 
     - name: Generate and output coverage report
