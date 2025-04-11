@@ -3,7 +3,7 @@ git+https://github.com/roboflow/sports.git
 Django==4.2.20
 django-widget-tweaks==1.5.0
 dotenv==0.9.9
-fastapi==0.115.12
+fastapi==0.110.3
 inference==0.45.0
 numpy==1.26.4
 opencv_contrib_python==4.10.0.84
