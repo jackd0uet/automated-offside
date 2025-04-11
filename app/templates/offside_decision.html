@@ -4,37 +4,49 @@
 <div class="container mt-4">
     <h2 class="text-center mb-4" id="decisionText">Offside Decision pending...</h2>
 
-    <!-- Offside radar view -->
-     <div id="radarContainer" class="mt-5">
-        <div class="d-flex justify-content-center">
-            <img id="radarImage" src="data:image/jpeg;base64, {{ offside_radar_view  }}" alt="Offside Radar View" class="img-fluid mt-2 shadow" style="max-width: 700px;">
-        </div>
-     </div>
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
 
-     <div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+                    <!-- Offside radar view -->
+                    <div id="radarContainer" class="mt-5">
+                        <div class="d-flex justify-content-center">
+                            <img id="radarImage" src="data:image/jpeg;base64, {{ offside_radar_view }}" alt="Offside Radar View" class="img-fluid mt-2 shadow" style="max-width: 700px;">
+                        </div>
+                    </div>
 
-    <!-- Offside decision override menu -->
-    <div id="overrideFormContainer" class="mt-5">
-        <form id="overrideForm" class="text-center">
-            <div class="mb-3">
-                <input type="hidden" name="algorithmDecision" value="{{ algorithm_decision }}">
-                {% if algorithm_decision  == "Offside" %}
-                    <h4>At least one attacking player is offside, this play should be considered offside.</h6>
-                {% else %}
-                    <h4>No attacking player is offside, this play should be considered onside.</h6>
-                {% endif %}
+                    <!-- Offside decision override menu -->
+                    <div id="overrideFormContainer" class="mt-5">
+                        <form id="overrideForm" class="text-center">
+                            <div class="mb-3">
+                                <input type="hidden" name="algorithmDecision" value="{{ algorithm_decision }}">
+                                {% if algorithm_decision == "Offside" %}
+                                    <h4>At least one attacking player is offside, this play should be considered offside.</h4>
+                                {% else %}
+                                    <h4>No attacking player is offside, this play should be considered onside.</h4>
+                                {% endif %}
 
-                <label class="form-label d-block"><h5>Is the decision correct?</h5></label>
-                <div class="mt-3 d-grid gap-2">
-                    <button id="confirmDecisionBtn" type="submit" class="btn btn-success">Yes</button>
-                </div>
-                <div class="mt-3 d-grid gap-2">
-                    <button id="overrideDecisionBtn" type="submit" class="btn btn-danger">No</button>
+                                <label class="form-label d-block"><h5>Is the decision correct?</h5></label>
+                                <div class="mt-3 d-grid gap-2">
+                                    <button id="confirmDecisionBtn" type="submit" class="btn btn-success">Yes</button>
+                                </div>
+                                <div class="mt-3 d-grid gap-2">
+                                    <button id="overrideDecisionBtn" type="submit" class="btn btn-danger">No</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
                 </div>
             </div>
-        </form>
+        </div>
     </div>
+
+    <!-- Alert container (position fixed) -->
+    <div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
 </div>
+
 
 {% csrf_token %}
 

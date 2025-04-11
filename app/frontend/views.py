@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 
@@ -38,6 +38,16 @@ def login_view(request):
 @login_required
 def upload_image(request):
     return render(request, "image_upload.html")
+
+# TODO: make this an admin only feature
+@login_required
+def logs_view(request):
+    offside_decisions = OffsideDecision.objects.all()
+    return render(request, "logs.html", {'offside_decisions': offside_decisions})
+
+def object_detection_detail(request, id, time_uploaded):
+    detection = get_object_or_404(ObjectDetection, id=id)
+    return render(request, 'object_detection_detail.html', {'detection': detection, 'detection_time': time_uploaded})
 
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):

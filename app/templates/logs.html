@@ -1,0 +1,53 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">Offside Decisions</h2>
+
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8 col-xl-7">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+
+                        <!-- Offside Decision Table -->
+                         <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Referee</th>
+                                    <th scope="col">Algorithm Decision</th>
+                                    <th scope="col">Final Decision</th>
+                                    <th scope="col">Upload Time</th>
+                                    <th scope="col">Decision Time</th>
+                                    <th scope="col">Object Detection</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for decision in offside_decisions %}
+                                    <tr>
+                                        <th scope="row">{{ decision.id }}</th>
+                                        <td>{{ decision.referee_id }}</td>
+                                        <td>{{ decision.algorithm_decision }}</td>
+                                        <td>{{ decision.final_decision }}</td>
+                                        <td>{{ decision.time_uploaded }}</td>
+                                        <td>{{ decision.time_decided }}</td>
+                                        <td>
+                                            <a href="{% url 'object_detection_detail' decision.detection_id.id decision.time_uploaded %}" class="btn btn-info">
+                                                View Detection
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No offside decisions available.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
