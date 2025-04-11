@@ -8,14 +8,6 @@ on:
 
 jobs:
   build:
-    env:
-      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-      ROBOFLOW_API_KEY: ${{ secrets.ROBOFLOW_API_KEY }}
-      DEBUG: "True"
-      TESTING: "True"
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -27,7 +19,6 @@ jobs:
         image: mysql:8.4
         env:
           MYSQL_DATABASE: offside_db
-          MYSQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           MYSQL_ROOT_PASSWORD: ${{ secrets.SQL_PASSWORD }}
         ports:
           - 3306:3306
