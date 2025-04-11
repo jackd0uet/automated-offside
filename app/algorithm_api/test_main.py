@@ -16,7 +16,6 @@ client = TestClient(app)
 def load_test_image(image_name: str = "221_jpg.rf.a5b76a00596073c23f1254a62e945536.jpg"):
     test_dir = os.path.dirname(os.path.realpath(__file__))
     image_path = os.path.join(test_dir, "test_images", image_name)
-    print(image_path)
     with open(image_path, "rb") as image_file:
         image_data = image_file.read()
     return BytesIO(image_data)
