@@ -4,6 +4,7 @@ from django.urls import reverse
 
 import base64
 import cv2
+import datetime
 import json
 import logging
 import requests
@@ -25,6 +26,7 @@ def upload_image(request):
 
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
+        request.session['time_uploaded'] = str(datetime.datetime.now())
         image_file = request.FILES['image']
         confidence = 0.5
 
@@ -46,6 +48,9 @@ def process_image(request):
                 refs_xy=json.dumps(response_data['refs_xy']),
                 file_path=json.dumps(response_data['file_path'])
             )
+
+            request.session['object_detection_id'] = ObjectDetection.objects.latest('id').id
+
             return HttpResponse(response.content)
         else:
             return JsonResponse({
@@ -148,3 +153,31 @@ def display_offside(request):
             'offside_radar_view': offside_radar_view
         }
     )
+
+def store_offside(request):
+    if request.method == "POST":
+        try:
+            decision_time = datetime.datetime.now()
+            time_uploaded = request.session.get('time_uploaded')
+
+            detection_id = request.session.get('object_detection_id')
+            detection = ObjectDetection.objects.get(id=detection_id)
+
+            data = json.loads(request.body.decode("utf-8"))
+
+            algorithm_decision = data['algorithm_decision']
+            final_decision = data['final_decision']
+
+            OffsideDecision.objects.create(
+                detection_id=detection,
+                algorithm_decision=algorithm_decision,
+                final_decision=final_decision,
+                time_uploaded=time_uploaded,
+                time_decided=decision_time
+            )
+
+            return JsonResponse({'success': f"Offside decision successfully saved"}, status=200)
+
+        except Exception as e:
+            logging.error(f"Error saving decision: {traceback.format_exc()}")
+            return JsonResponse({'error': f"Failed to save decision: {str(e)}"}, status=500)

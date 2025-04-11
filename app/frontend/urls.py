@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import index, login, upload_image, process_image, render_pitch_view, classify_offside, display_offside
+from .views import index, login, upload_image, process_image, render_pitch_view, classify_offside, display_offside, store_offside
 
 urlpatterns = [
     path("", index, name="index"),
@@ -9,4 +9,5 @@ urlpatterns = [
     path("render_pitch/", render_pitch_view, name="render_pitch"),
     path("classify_offside/", classify_offside, name="classify_offside"),
     path("display_offside/", display_offside, name="display_offside"),
+    path("store_offside/", store_offside, name="store_offside"),
 ]

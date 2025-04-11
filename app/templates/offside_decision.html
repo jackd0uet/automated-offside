@@ -11,6 +11,8 @@
         </div>
      </div>
 
+     <div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+
     <!-- Offside decision override menu -->
     <div id="overrideFormContainer" class="mt-5">
         <form id="overrideForm" class="text-center">
@@ -37,6 +39,27 @@
 {% csrf_token %}
 
 <script>
+    // TODO: Move this to utility js file
+    function showAlert(message, type, duration = 3000) {
+        const alertContainer = document.getElementById('alert-container');
+
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = 'alert';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        alertContainer.appendChild(alert);
+
+        setTimeout(() => {
+            alert.classList.remove('show');
+            alert.classList.add('hide');
+            setTimeout(() => alert.remove(), 300)
+        }, duration);
+    }
+
     const csrftoken = Cookies.get('csrftoken');
 
     const decisionText = document.getElementById("decisionText");
@@ -60,6 +83,24 @@
 
         decisionText.textContent = "Final decision: " + finalDecision;
         overrideFormContainer.style.display = 'none';
+
+        fetch("{% url 'store_offside' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
+            },
+            body: JSON.stringify({
+                algorithm_decision: algorithmDecision,
+                final_decision: finalDecision
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to save image");
+            }
+            showAlert("Offside decision saved successfully!", "success")
+        })
     });
 </script>
 
