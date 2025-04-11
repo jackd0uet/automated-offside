@@ -43,10 +43,14 @@ jobs:
         pip install pytest pytest-cov
     - name: Apply database migrations
       run: |
+        cd app
         python manage.py migrate
+        cd ../
     - name: Run Tests
       run: |
+        cd app
         pytest --cov --cov-branch --cov-report=xml manage.py test
+        cd ../
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v5
       with:
