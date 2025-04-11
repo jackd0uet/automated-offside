@@ -51,7 +51,7 @@ jobs:
         python manage.py migrate
         cd ../
 
-    - name: Run Tests
+    - name: Run Frontend Tests
       env:
           SQL_USER: root
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
@@ -60,8 +60,26 @@ jobs:
           DEBUG: 1
       run: |
         cd app
-        pytest --cov=app --cov-branch --cov-report=xml
+        coverage run --rcfile ./config/.coveragerc --data-file=.coverage.frontend manage.py test frontend
         cd ../
+
+    - name: Run API Tests
+      env:
+          SQL_USER: root
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          MYSQL_HOST: 127.0.0.1
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DEBUG: 1
+      run: |
+        cd app/algorithm_api
+        coverage run --rcfile ./config/.coveragerc --data-file=.coverage.api pytest
+        cd ../../
+
+    - name: Generate and output coverage report
+      run: |
+        coverage combine .coverage.frontend .coverage.api
+        coverage report -m
+        coverage xml
 
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4
