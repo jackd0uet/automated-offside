@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 
 import base64
 import cv2
@@ -40,7 +41,8 @@ def upload_image(request):
 
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
-        request.session['time_uploaded'] = str(datetime.datetime.now())
+        now = datetime.datetime.now()
+        request.session['time_uploaded'] = str(timezone.make_aware(now))
         image_file = request.FILES['image']
         confidence = 0.5
 
@@ -172,7 +174,8 @@ def display_offside(request):
 def store_offside(request):
     if request.method == "POST":
         try:
-            decision_time = datetime.datetime.now()
+            now = datetime.datetime.now()
+            decision_time = timezone.make_aware(now)
             time_uploaded = request.session.get('time_uploaded')
 
             detection_id = request.session.get('object_detection_id')
