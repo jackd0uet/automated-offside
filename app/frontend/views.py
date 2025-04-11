@@ -191,6 +191,8 @@ def store_offside(request):
             detection_id = request.session.get('object_detection_id')
             detection = ObjectDetection.objects.get(id=detection_id)
 
+            referee = request.user
+
             data = json.loads(request.body.decode("utf-8"))
 
             algorithm_decision = data['algorithm_decision']
@@ -198,6 +200,7 @@ def store_offside(request):
 
             OffsideDecision.objects.create(
                 detection_id=detection,
+                referee_id=referee,
                 algorithm_decision=algorithm_decision,
                 final_decision=final_decision,
                 time_uploaded=time_uploaded,
