@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -33,6 +34,7 @@ def login_view(request):
 
     return render(request, "login.html", {"form": form, "next": request.GET.get("next", "")})
 
+@login_required
 def upload_image(request):
     return render(request, "image_upload.html")
 
@@ -148,6 +150,7 @@ def render_offside_view(request):
         logging.error(f"Error rendering offside: {traceback.format_exc()}")
         return JsonResponse({'error': f"Failed to render offside: {str(e)}"}, status=500)
 
+@login_required
 def display_offside(request):
     classification_result = request.session.get('classification_result', None)
     offside_radar_view = request.session.get('offside_radar_view', None)
