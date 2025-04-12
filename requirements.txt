@@ -9,6 +9,7 @@ mysqlclient==2.2.7
 numpy==1.26.4
 opencv_contrib_python==4.10.0.84
 opencv_python==4.10.0.84
+python-multipart==0.0.20
 Requests==2.32.3
 scikit_learn==1.6.1
 sports==0.1.0
