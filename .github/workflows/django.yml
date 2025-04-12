@@ -56,7 +56,7 @@ jobs:
           SQL_USER: root
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           MYSQL_HOST: 127.0.0.1
-          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEBUG: 1
       run: |
         cd app
@@ -68,7 +68,6 @@ jobs:
           SQL_USER: root
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           MYSQL_HOST: 127.0.0.1
-          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEBUG: 1
       run: |
         cd app/algorithm_api
