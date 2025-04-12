@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.db.models import F
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -74,8 +75,13 @@ def logs_view(request):
         except ValueError:
             pass
 
+    total = offside_decisions.count()
+    correct = offside_decisions.filter(algorithm_decision=F("final_decision")).count()
+    accuracy = round((correct / total) * 100, 1) if total > 0 else 0
+
     context = {
-        'offside_decisions': offside_decisions
+        'offside_decisions': offside_decisions,
+        'accuracy': accuracy,
     }
 
     return render(request, "logs.html", context)

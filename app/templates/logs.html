@@ -9,6 +9,18 @@
                 <div class="card shadow-sm">
                     <div class="card-body p-4">
 
+                        <!-- Algorithm accuracy -->
+                        <div class="mb-4">
+                            <h5>Algorithm Accuracy</h5>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     style="width: {{ accuracy }}%;" aria-valuenow="{{ accuracy }}"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ accuracy }}%
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Filter decisions -->
                         <form method="get" class="mb-3">
                             <div class="row g-2 align-items-end">
