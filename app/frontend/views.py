@@ -43,7 +43,42 @@ def upload_image(request):
 @login_required
 def logs_view(request):
     offside_decisions = OffsideDecision.objects.all()
-    return render(request, "logs.html", {'offside_decisions': offside_decisions})
+
+    preset = request.GET.get("preset")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    today = timezone.now()
+
+    if preset == "last_week":
+        start = today - datetime.timedelta(days=7)
+        offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+    elif preset == "last_month":
+        start = today - datetime.timedelta(days=30)
+        offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+    elif preset == "last_year":
+        start = today - datetime.timedelta(days=365)
+        offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+
+    if start_date:
+        try:
+            start = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+            offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+        except ValueError:
+            pass
+
+    if end_date:
+        try:
+            end = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+            offside_decisions = offside_decisions.filter(time_uploaded__date__lte=end)
+        except ValueError:
+            pass
+
+    context = {
+        'offside_decisions': offside_decisions
+    }
+
+    return render(request, "logs.html", context)
 
 def object_detection_detail(request, id, time_uploaded):
     detection = get_object_or_404(ObjectDetection, id=id)

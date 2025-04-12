@@ -9,6 +9,34 @@
                 <div class="card shadow-sm">
                     <div class="card-body p-4">
 
+                        <!-- Filter decisions -->
+                        <form method="get" class="mb-3">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-auto">
+                                    <label for="preset" class="form-label">Quick Filter</label>
+                                    <select id="preset" name="preset" class="form-select" onchange="this.form.submit()">
+                                        <option value="">-- Select --</option>
+                                        <option value="last_week" {% if request.GET.preset == 'last_week' %}selected{% endif %}>Last Week</option>
+                                        <option value="last_month" {% if request.GET.preset == 'last_month' %}selected{% endif %}>Last Month</option>
+                                        <option value="last_year" {% if request.GET.preset == 'last_year' %}selected{% endif %}>Last Year</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <label for="start_date" class="form-label">From</label>
+                                    <input type="date" id="start_date" name="start_date" class="form-control"
+                                           value="{{ request.GET.start_date }}">
+                                </div>
+                                <div class="col-auto">
+                                    <label for="end_date" class="form-label">To</label>
+                                    <input type="date" id="end_date" name="end_date" class="form-control"
+                                           value="{{ request.GET.end_date }}">
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-primary">Apply</button>
+                                </div>
+                            </div>
+                        </form>
+
                         <!-- Offside Decision Table -->
                          <table class="table table-bordered table-striped">
                             <thead>
