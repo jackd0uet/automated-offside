@@ -1,15 +1,15 @@
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.utils import timezone
+from django.utils.timezone import now
 
 import base64
 import cv2
-import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import requests
@@ -49,28 +49,28 @@ def logs_view(request):
     start_date = request.GET.get("start_date")
     end_date = request.GET.get("end_date")
 
-    today = timezone.now()
+    today = now()
 
     if preset == "last_week":
-        start = today - datetime.timedelta(days=7)
+        start = today - timedelta(days=7)
         offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
     elif preset == "last_month":
-        start = today - datetime.timedelta(days=30)
+        start = today - timedelta(days=30)
         offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
     elif preset == "last_year":
-        start = today - datetime.timedelta(days=365)
+        start = today - timedelta(days=365)
         offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
 
     if start_date:
         try:
-            start = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+            start = datetime.strptime(start_date, "%Y-%m-%d").date()
             offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
         except ValueError:
             pass
 
     if end_date:
         try:
-            end = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+            end = datetime.strptime(end_date, "%Y-%m-%d").date()
             offside_decisions = offside_decisions.filter(time_uploaded__date__lte=end)
         except ValueError:
             pass
@@ -92,8 +92,7 @@ def object_detection_detail(request, id, time_uploaded):
 
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
-        now = datetime.datetime.now()
-        request.session['time_uploaded'] = str(timezone.make_aware(now))
+        request.session['time_uploaded'] = str(now())
         image_file = request.FILES['image']
         confidence = 0.5
 
@@ -225,12 +224,13 @@ def display_offside(request):
 def store_offside(request):
     if request.method == "POST":
         try:
-            now = datetime.datetime.now()
-            decision_time = timezone.make_aware(now)
+            decision_time = str(now())
             time_uploaded = request.session.get('time_uploaded')
 
             detection_id = request.session.get('object_detection_id')
             detection = ObjectDetection.objects.get(id=detection_id)
+
+            referee = request.user
 
             data = json.loads(request.body.decode("utf-8"))
 
@@ -239,6 +239,7 @@ def store_offside(request):
 
             OffsideDecision.objects.create(
                 detection_id=detection,
+                referee_id=referee,
                 algorithm_decision=algorithm_decision,
                 final_decision=final_decision,
                 time_uploaded=time_uploaded,
