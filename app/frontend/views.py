@@ -21,7 +21,21 @@ from .utils import render_offside, render_pitch, format_json
 logging = logging.getLogger(__name__)
 
 def index(request):
-    return render(request, "index.html")
+    decisions = OffsideDecision.objects.all()
+    total = decisions.count()
+    correct = decisions.filter(algorithm_decision=F("final_decision")).count()
+    accuracy = round((correct / total) * 100, 1) if total > 0 else 0
+
+    recent_upload = decisions.order_by('-time_uploaded').first()
+
+    context = {
+        'total_decisions': total,
+        'accuracy': accuracy,
+        'recent_upload': recent_upload.time_uploaded if recent_upload else None,
+        'year': now().year,
+    }
+
+    return render(request, "index.html", context)
 
 def login_view(request):
     if request.method == "POST":
@@ -88,7 +102,13 @@ def logs_view(request):
 
 def object_detection_detail(request, id, time_uploaded):
     detection = get_object_or_404(ObjectDetection, id=id)
-    return render(request, 'object_detection_detail.html', {'detection': detection, 'detection_time': time_uploaded})
+
+    context = {
+        'detection': detection,
+        'detection_time': time_uploaded
+    }
+
+    return render(request, 'object_detection_detail.html', context)
 
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):

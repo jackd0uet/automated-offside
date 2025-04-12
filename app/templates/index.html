@@ -1,5 +1,47 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <h1>Home page in progress...</h1>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Semi-automated Offside Decision Review System</h1>
+        <p class="lead text-muted">Analyze and verify offside decisions using computer vision algorithms and referee input.</p>
+    </div>
+
+    <div class="row text-center mb-5">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Total Decisions</h5>
+                    <p class="display-6">{{ total_decisions }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Algorithm Accuracy</h5>
+                    <p class="display-6">{{ accuracy }}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Most Recent Upload</h5>
+                    <p class="display-6">
+                        {% if recent_upload %}
+                            {{ recent_upload|date:"M d, Y H:i" }}
+                        {% else %}
+                            No uploads yet
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center text-muted">
+        <small>Built with Django & YOLO | © {{ year }}</small>
+    </div>
+</div>
 {% endblock %}

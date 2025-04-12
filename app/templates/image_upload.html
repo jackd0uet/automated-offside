@@ -2,38 +2,39 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="text-center mb-4">Upload an Image for Object Detection</h2>
+    <h1 class="text-center mb-5 display-4 fw-semibold">Upload an Image for Object Detection</h1>
+
     <div class="row justify-content-center">
-        <div class="col-md-10 col-lg-8 col-xl-7">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
+        <div class="col-md-12 col-lg-10 col-xl-9">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
                     <form id="uploadForm" enctype="multipart/form-data" class="text-center">
-                        <div id="filePickerContainer" class="mb-3">
+                        <div id="filePickerContainer" class="mb-4">
                             <input type="file" id="imageInput" name="image" accept="image/*" class="form-control" required>
                         </div>
 
                         <!-- Image preview (hidden by default) -->
-                        <div id="imageContainer" class="fade mt-3" style="display: none;">
-                            <h3 class="text-center">Selected Image</h3>
+                        <div id="imageContainer" class="fade mt-4" style="display: none;">
+                            <h3 class="text-center fw-medium mb-3">Selected Image</h3>
                             <div class="d-flex justify-content-center" >
-                                <img id="previewImage" class="img-fluid mt-2 shadow" style="max-width: 99%;"/>
+                                <img id="previewImage" class="img-fluid shadow" style="max-width: 99%;"/>
                             </div>
                         </div>
 
-                        <div class="my-4 text-center">
-                            <button id="runDetectionBtn" type="submit" class="btn btn-primary">Run Detection</button>
+                        <div class="my-5 text-center">
+                            <button id="runDetectionBtn" type="submit" class="btn btn-primary btn-lg px-5">Run Detection</button>
                         </div>
                     </form>
 
                     <!-- Progress bar (hidden by default) -->
-                    <div id="progressContainer" class="progress mt-4 fade" style="display: none; height: 20px;">
+                    <div id="progressContainer" class="progress mt-4 fade" style="display: none; height: 24px;">
                         <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
                             role="progressbar" style="width: 0%;">0%</div>
                     </div>
 
                     <!-- Detection result (hidden by default) -->
                     <div id="detectionContainer" style="display: none;" class="fade mt-5">
-                        <h3 class="mt-4 text-center">Detection Result</h3>
+                        <h3 class="mt-4 mb-3 fw-medium text-center">Detection Result</h3>
                         <div class="d-flex justify-content-center">
                             <img id="resultImage" class="img-fluid mt-2 shadow" style="max-width: 99%;"/>
                         </div>
