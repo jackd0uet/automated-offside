@@ -1,25 +1,69 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h2 class="text-center mb-4">Offside Decisions</h2>
+<div class="container py-5">
+    <h1 class="text-center mb-5 display-4 fw-semibold">Offside Decisions</h1>
 
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8 col-xl-7">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
+    <div class="row justify-content-center">
+        <div class="col-md-12 col-lg-10 col-xl-9">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
 
-                        <!-- Offside Decision Table -->
-                         <table class="table table-bordered table-striped">
-                            <thead>
+                    <!-- Algorithm accuracy -->
+                    <div class="mb-5">
+                        <h4 class="fw-medium">Algorithm Accuracy</h4>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-success fw-bold fs-5" role="progressbar"
+                                 style="width: {{ accuracy }}%;" aria-valuenow="{{ accuracy }}"
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ accuracy }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter decisions -->
+                    <form method="get" class="mb-5">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label for="preset" class="form-label fw-semibold">Quick Filter</label>
+                                <select id="preset" name="preset" class="form-select form-select-lg"
+                                        onchange="this.form.submit()">
+                                    <option value="">-- Select --</option>
+                                    <option value="last_week" {% if request.GET.preset == 'last_week' %}selected{% endif %}>Last Week</option>
+                                    <option value="last_month" {% if request.GET.preset == 'last_month' %}selected{% endif %}>Last Month</option>
+                                    <option value="last_year" {% if request.GET.preset == 'last_year' %}selected{% endif %}>Last Year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="start_date" class="form-label fw-semibold">From</label>
+                                <input type="date" id="start_date" name="start_date"
+                                       class="form-control form-control-lg"
+                                       value="{{ request.GET.start_date }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="end_date" class="form-label fw-semibold">To</label>
+                                <input type="date" id="end_date" name="end_date"
+                                       class="form-control form-control-lg"
+                                       value="{{ request.GET.end_date }}">
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">Apply</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Offside Decision Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle text-center">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Referee</th>
-                                    <th scope="col">Algorithm Decision</th>
-                                    <th scope="col">Final Decision</th>
-                                    <th scope="col">Upload Time</th>
-                                    <th scope="col">Decision Time</th>
-                                    <th scope="col">Object Detection</th>
+                                    <th>#</th>
+                                    <th>Referee</th>
+                                    <th>Algorithm</th>
+                                    <th>Final</th>
+                                    <th>Upload Time</th>
+                                    <th>Decision Time</th>
+                                    <th>Detection</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -32,22 +76,25 @@
                                         <td>{{ decision.time_uploaded }}</td>
                                         <td>{{ decision.time_decided }}</td>
                                         <td>
-                                            <a href="{% url 'object_detection_detail' decision.detection_id.id decision.time_uploaded %}" class="btn btn-info">
-                                                View Detection
+                                            <a href="{% url 'object_detection_detail' decision.detection_id.id decision.time_uploaded %}"
+                                               class="btn btn-info btn-sm">
+                                                View
                                             </a>
                                         </td>
                                     </tr>
                                 {% empty %}
                                     <tr>
-                                        <td colspan="6" class="text-center">No offside decisions available.</td>
+                                        <td colspan="7" class="text-center text-muted">No offside decisions available.</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
-                         </table>
+                        </table>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 {% endblock %}

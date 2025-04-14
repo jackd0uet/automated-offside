@@ -1,14 +1,15 @@
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.db.models import F
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.utils import timezone
+from django.utils.timezone import now
 
 import base64
 import cv2
-import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import requests
@@ -20,7 +21,21 @@ from .utils import render_offside, render_pitch, format_json
 logging = logging.getLogger(__name__)
 
 def index(request):
-    return render(request, "index.html")
+    decisions = OffsideDecision.objects.all()
+    total = decisions.count()
+    correct = decisions.filter(algorithm_decision=F("final_decision")).count()
+    accuracy = round((correct / total) * 100, 1) if total > 0 else 0
+
+    recent_upload = decisions.order_by('-time_uploaded').first()
+
+    context = {
+        'total_decisions': total,
+        'accuracy': accuracy,
+        'recent_upload': recent_upload.time_uploaded if recent_upload else None,
+        'year': now().year,
+    }
+
+    return render(request, "index.html", context)
 
 def login_view(request):
     if request.method == "POST":
@@ -43,16 +58,61 @@ def upload_image(request):
 @login_required
 def logs_view(request):
     offside_decisions = OffsideDecision.objects.all()
-    return render(request, "logs.html", {'offside_decisions': offside_decisions})
+
+    preset = request.GET.get("preset")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    today = now()
+
+    if preset == "last_week":
+        start = today - timedelta(days=7)
+        offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+    elif preset == "last_month":
+        start = today - timedelta(days=30)
+        offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+    elif preset == "last_year":
+        start = today - timedelta(days=365)
+        offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+
+    if start_date:
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d").date()
+            offside_decisions = offside_decisions.filter(time_uploaded__date__gte=start)
+        except ValueError:
+            pass
+
+    if end_date:
+        try:
+            end = datetime.strptime(end_date, "%Y-%m-%d").date()
+            offside_decisions = offside_decisions.filter(time_uploaded__date__lte=end)
+        except ValueError:
+            pass
+
+    total = offside_decisions.count()
+    correct = offside_decisions.filter(algorithm_decision=F("final_decision")).count()
+    accuracy = round((correct / total) * 100, 1) if total > 0 else 0
+
+    context = {
+        'offside_decisions': offside_decisions,
+        'accuracy': accuracy,
+    }
+
+    return render(request, "logs.html", context)
 
 def object_detection_detail(request, id, time_uploaded):
     detection = get_object_or_404(ObjectDetection, id=id)
-    return render(request, 'object_detection_detail.html', {'detection': detection, 'detection_time': time_uploaded})
+
+    context = {
+        'detection': detection,
+        'detection_time': time_uploaded
+    }
+
+    return render(request, 'object_detection_detail.html', context)
 
 def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
-        now = datetime.datetime.now()
-        request.session['time_uploaded'] = str(timezone.make_aware(now))
+        request.session['time_uploaded'] = str(now())
         image_file = request.FILES['image']
         confidence = 0.5
 
@@ -184,8 +244,7 @@ def display_offside(request):
 def store_offside(request):
     if request.method == "POST":
         try:
-            now = datetime.datetime.now()
-            decision_time = timezone.make_aware(now)
+            decision_time = str(now())
             time_uploaded = request.session.get('time_uploaded')
 
             detection_id = request.session.get('object_detection_id')
