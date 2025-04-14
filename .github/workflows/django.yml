@@ -77,7 +77,7 @@ jobs:
 
     - name: Generate and output coverage report
       run: |
-        coverage combine .coverage.frontend .coverage.api
+        coverage combine app/.coverage.frontend app/algorithm_api/.coverage.api
         coverage report -m
         coverage xml
 
