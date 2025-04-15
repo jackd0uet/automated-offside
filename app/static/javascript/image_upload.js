@@ -18,13 +18,15 @@ const adjustmentsMenu = document.getElementById("adjustmentsMenu");
 const adjustmentsForm = document.getElementById("adjustmentsForm");
 const tweaksForm = document.getElementById("tweaksForm");
 const confidenceSlider = document.getElementById("confidenceSlider");
-const goalkeeperNo = document.getElementById("goalkeeperNo");
+
+const defendingForm = document.getElementById("defendingForm");
 
 const adjustmentsOffCanvas = new bootstrap.Offcanvas(adjustmentsMenu, {
             backdrop: false
         });
 
 let detectionData = null;
+let defending_team = null;
 
 function startProgressBar() {
     // Show progress bar
@@ -169,6 +171,26 @@ function generatePlayerTweaksForm(players) {
     return form;
 }
 
+function waitForDefendingAssignment() {
+    return new Promise((resolve) => {
+        adjustmentsForm.style.display = "none";
+        defendingForm.style.display = "block";
+
+        const isTeamADefending = document.getElementById("teamA").checked;
+
+        const handler = function(event) {
+            event.preventDefault();
+
+            defending_team = isTeamADefending ? 0 : 1;
+            defendingForm.removeEventListener("submit", handler);
+
+            resolve();
+        };
+
+        defendingForm.addEventListener("submit", handler)
+    });
+}
+
 imageInput.addEventListener("change", function(event) {
     const file = event.target.files[0];
     if (file) {
@@ -200,16 +222,16 @@ uploadForm.addEventListener("submit", function(event) {
     runImageDetection(formData, true);
 });
 
-adjustmentsForm.addEventListener("submit", function(event) {
+adjustmentsForm.addEventListener("submit", async function(event) {
     event.preventDefault();
 
     const clickedBtn = event.submitter;
 
     if (clickedBtn.id === "confirmOffsideBtn") {
-        startProgressBar();
 
-        runDetectionBtn.disabled = true;
-        runDetectionBtn.textContent = "Offside Classification in progress...";
+        if (!detectionData.players_detections.class_name.includes("goalkeeper")) {
+            await waitForDefendingAssignment();
+        }
 
         fetch(classifyOffsideUrl, {
             method: "POST",
@@ -217,12 +239,18 @@ adjustmentsForm.addEventListener("submit", function(event) {
                 "Content-Type": "application/json",
                 "X-CSRFToken": csrftoken
             },
-            body: JSON.stringify(detectionData)
+            body: JSON.stringify({
+                detection_data: detectionData,
+                defending_team: defending_team
+            })
         })
         .then(response => response.json())
         .then(data => {
-            stopProgressBar();
             window.location.href = data.redirect_url;
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Error");
         });
     }
     else if (clickedBtn.id === "cancelDetectionBtn") {

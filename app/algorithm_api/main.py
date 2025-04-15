@@ -119,19 +119,25 @@ async def detection(
 
 @app.post("/offside-classification/")
 async def offside_classification(request: Request):
+    # TODO: work out why this is returning the wrong image
     try:
         data = await request.body()
         data = json.loads(data.decode("utf-8"))
 
+        logging.warning(f"Offside classification endpoint received: {data}")
+
+        players_detections_data = data['detection_data']['players_detections']
+        defending_team = data['defending_team']
+
         players_detections = {
-            'xyxy': np.array(data['players_detections']['xyxy']),
-            'confidence': np.array(data['players_detections']['confidence']),
-            'class_id': np.array(data['players_detections']['class_id']),
-            'tracker_id': np.array(data['players_detections']['tracker_id']),
-            'class_name': np.array(data['players_detections']['class_name'], dtype=str),
+            'xyxy': np.array(players_detections_data['xyxy']),
+            'confidence': np.array(players_detections_data['confidence']),
+            'class_id': np.array(players_detections_data['class_id']),
+            'tracker_id': np.array(players_detections_data['tracker_id']),
+            'class_name': np.array(players_detections_data['class_name'], dtype=str),
         }
 
-        classification_helper = OffsideClassification(players_detections)
+        classification_helper = OffsideClassification(players_detections, defending_team)
         offside_status, second_defender = classification_helper.classify()
 
         return JSONResponse(content=convert_to_serializable({

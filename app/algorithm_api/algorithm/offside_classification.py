@@ -2,7 +2,9 @@ import numpy as np
 import supervision as sv
 
 class OffsideClassification():
-    def __init__(self, players_detections):
+    def __init__(self, players_detections, defending_team=None):
+        self.defending_team = defending_team
+
         self.GOALKEEPER_ID = 1
 
         self.players_detections = players_detections
@@ -33,18 +35,16 @@ class OffsideClassification():
         team_1_indices = np.where(class_ids == 1)[0]
         goalkeeper_indices = np.where(np.char.equal(class_names, 'goalkeeper'))[0]
 
-        if goalkeeper_indices.size == 0:
-            # TODO: implement this
-            raise ValueError("No goalkeeper detected, fallback behavior not implemented.")
+        # This is actually the default behavior, defending team will only be set if there is no goalkeeper detection.
+        if self.defending_team == None:
+            goalkeeper_index = goalkeeper_indices[0]
+            goalkeeper_team = class_ids[goalkeeper_index]
 
-        # For now, assume the first goalkeeper detected is what we are interested in.
-        goalkeeper_index = goalkeeper_indices[0]
-        goalkeeper_team = class_ids[goalkeeper_index]
+            self.defending_team = goalkeeper_team
+       
 
-        defending_team = goalkeeper_team
-
-        attacking_indices = team_1_indices if defending_team == 0 else team_0_indices
-        defending_indices = team_0_indices if defending_team == 0 else team_1_indices
+        attacking_indices = team_1_indices if self.defending_team == 0 else team_0_indices
+        defending_indices = team_0_indices if self.defending_team == 0 else team_1_indices
 
         attackers = self.__get_team_detections(attacking_indices)
         defenders = self.__get_team_detections(defending_indices)
