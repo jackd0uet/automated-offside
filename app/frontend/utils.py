@@ -34,9 +34,39 @@ def draw_legend(image, legend):
 
     return image
 
+def draw_labels_on_pitch(pitch, xy, labels, padding=50, scale=0.1):
+    for point, label in zip(xy, labels):
+        scaled_point = (
+            int(point[0] * scale) + padding,
+            int(point[1] * scale) + padding
+        )
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.5
+        thickness = 1
+        text_size, _ = cv2.getTextSize(label, font, font_scale, thickness)
+        text_width, text_height = text_size
+
+        text_x = scaled_point[0] - text_width // 2
+        text_y = scaled_point[1] + text_height // 2
+
+        cv2.putText(
+            img=pitch,
+            text=label,
+            org=(text_x, text_y),
+            fontFace=font,
+            fontScale=font_scale,
+            color=(255, 255, 255),
+            thickness=thickness,
+            lineType=cv2.LINE_AA
+        )
+
+    return pitch
+
 def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
     annotated_image = draw_pitch(config)
 
+    # Draw ball
     annotated_image = draw_points_on_pitch(
         config=config,
         xy=ball_xy['xy'],
@@ -46,22 +76,43 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
         pitch=annotated_image
     )
 
+    # Team A
+    team_a_mask = players_detections['class_id'] == 0
+    team_a_xy = players_xy['xy'][team_a_mask]
+    team_a_labels = [str(tid) for tid in players_detections['tracker_id'][team_a_mask]]
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=players_xy['xy'][players_detections['class_id'] == 0],
+        xy=team_a_xy,
         face_color=sv.Color.from_hex('00BFFF'),
         edge_color=sv.Color.BLACK,
         radius=16,
         pitch=annotated_image)
+    
+    annotated_image = draw_labels_on_pitch(
+        pitch=annotated_image,
+        xy=team_a_xy,
+        labels=team_a_labels
+    )
 
+    # Team B
+    team_b_mask = players_detections['class_id'] == 1
+    team_b_xy = players_xy['xy'][team_b_mask]
+    team_b_labels = [str(tid) for tid in players_detections['tracker_id'][team_b_mask]]
     annotated_image = draw_points_on_pitch(
         config=config,
-        xy=players_xy['xy'][players_detections['class_id'] == 1],
+        xy=team_b_xy,
         face_color=sv.Color.from_hex('FF1493'),
         edge_color=sv.Color.BLACK,
         radius=16,
         pitch=annotated_image)
 
+    annotated_image = draw_labels_on_pitch(
+        pitch=annotated_image,
+        xy=team_b_xy,
+        labels=team_b_labels
+    )
+
+    # Referees
     annotated_image = draw_points_on_pitch(
         config=config,
         xy=refs_xy['xy'],
@@ -70,13 +121,13 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
         radius=16,
         pitch=annotated_image)
 
+    # Legend
     legend = [
         ('Ball', sv.Color.WHITE),
         ('Team A', sv.Color.from_hex('00BFFF')),
         ('Team B', sv.Color.from_hex('FF1493')),
         ('Referee', sv.Color.from_hex('FFD700')),
     ]
-
     annotated_image = draw_legend(annotated_image, legend)
 
     return annotated_image

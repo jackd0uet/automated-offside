@@ -48,44 +48,54 @@
     <!-- Detection adjustments menu  (hidden by default)-->
      <div id="adjustmentsMenu" class="offcanvas offcanvas-start fade" tabindex="-1" style="width: 300px;" aria-labelledby="adjustmentsMenuLabel">
         <div class="offcanvas-header">
-            <h5 id="adjustmentsMenuLabel">Detections Menu</h5>
+            <h4 id="adjustmentsMenuLabel">Detections Menu</h4>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
         </div>
 
         <div class="offcanvas-body">
             <form id="adjustmentsForm" class="text-center">
                 <div class="mb-3">
-                    <label class="form-label d-block">Is the goalkeeper on the correct team?</label>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="goalkeeperCorrect" id="goalkeeperYes" value="yes" checked>
-                        <label class="form-check-label" for="goalkeeperYes">Yes</label>
+                    <h5>
+                        Is everything correct?
+                    </h5>
+                    <div class="mt-3 mb-5 d-grid gap-2">
+                        <button id="confirmOffsideBtn" type="submit" class="btn btn-success">Proceed to Offside Detection</button>
                     </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="goalkeeperCorrect" id="goalkeeperNo" value="no">
-                        <label class="form-check-label" for="goalkeeperNo">No</label>
+
+                    <h5>
+                        Does something need changing?
+                    </h5>
+                    <div class="mt-3 mb-5 d-grid gap-2">
+                        <button id="manualTeamChange" type="submit" class="btn btn-primary">Adjust Detections</button>
+                    </div>
+
+                    <h5>
+                        Should detection be run again?
+                    </h5>
+                    <div class="mt-3 mb-1">
+                        <label for="confidenceSlider" class="form-label">Confidence Threshold:</label>
+                        <input type="range" class="form-range" id="confidenceSlider" min="0" max="1" step="0.1" value="0.5">
+                        <span id="confidenceValue">0.5</span>
+                    </div>
+                    <div class="mt-3 mb-5 d-grid gap-2">
+                        <button id="rerunDetectionBtn" type="submit" class="btn btn-warning">Rerun Detections</button>
+                    </div>
+
+                    <h5>
+                        Otherwise
+                    </h5>
+                    <div class="mt-3 d-grid gap-2">
+                        <button id="cancelDetectionBtn" type="submit" class="btn btn-danger">Start Again</button>
                     </div>
                 </div>
+            </form>
 
-                <div class="mb-3">
-                    <label for="confidenceSlider" class="form-label">Confidence Threshold:</label>
-                    <input type="range" class="form-range" id="confidenceSlider" min="0" max="1" step="0.1" value="0.5">
-                    <span id="confidenceValue">0.5</span>
-                </div>
 
-                <div class="mt-3 d-grid gap-2">
-                    <button id="confirmOffsideBtn" type="submit" class="btn btn-success">Proceed to Offside Detection</button>
-                </div>
-
-                <div class="mt-3 d-grid gap-2">
-                    <button id="rerunDetectionBtn" type="submit" class="btn btn-warning">Rerun Detections</button>
-                </div>
-
-                <div class="mt-3 d-grid gap-2">
-                    <button id="cancelDetectionBtn" type="submit" class="btn btn-danger">Start Again</button>
-                </div>
+            <form id=tweaksForm class="text-center" style="display: none;">
             </form>
         </div>
      </div>
+     <div id="alert-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
 </div>
 
 {% csrf_token %}
@@ -109,6 +119,7 @@
 
     const adjustmentsMenu = document.getElementById("adjustmentsMenu");
     const adjustmentsForm = document.getElementById("adjustmentsForm");
+    const tweaksForm = document.getElementById("tweaksForm");
     const confidenceSlider = document.getElementById("confidenceSlider");
     const goalkeeperNo = document.getElementById("goalkeeperNo");
 
@@ -216,7 +227,50 @@
 
             adjustmentsOffCanvas.show();
         });
-}
+    }
+
+    function generatePlayerTweaksForm(players) {
+        const form = document.createElement("form");
+        form.id = "dynamicTweaksForm";
+        form.classList.add("mb-3");
+
+        players.tracker_id.forEach((id, index) => {
+            const classId = players.class_id[index];
+            const className = players.class_name[index];
+
+            const playerDiv = document.createElement("div");
+            playerDiv.classList.add("mb-3");
+
+            playerDiv.innerHTML = `
+                <label class="form-label d-block">
+                    Player ID: <strong>${id}</strong> (${className})
+                </label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="team_${id}" id="teamA_${id}" value="0" ${classId === 0 ? "checked" : ""}>
+                    <label class="form-check-label" for="teamA_${id}">Team A</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="team_${id}" id="teamB_${id}" value="1" ${classId === 1 ? "checked" : ""}>
+                    <label class="form-check-label" for="teamB_${id}">Team B</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="delete_${id}" name="delete_${id}">
+                    <label class="form-check-label text-danger" for="delete_${id}">Delete</label>
+                </div>
+                <hr/>
+            `;
+            form.appendChild(playerDiv);
+        });
+
+        const confirmBtn = document.createElement("button");
+        confirmBtn.type = "submit";
+        confirmBtn.classList.add("btn", "btn-primary", "mt-2");
+        confirmBtn.textContent = "Apply Changes";
+
+        form.appendChild(confirmBtn);
+
+        return form;
+    }
 
     imageInput.addEventListener("change", function(event) {
         const file = event.target.files[0];
@@ -255,7 +309,6 @@
         const clickedBtn = event.submitter;
 
         if (clickedBtn.id === "confirmOffsideBtn") {
-            // Another loading bar? perhaps for now
             startProgressBar();
 
             runDetectionBtn.disabled = true;
@@ -280,36 +333,9 @@
         }
         else if (clickedBtn.id === "rerunDetectionBtn") {
             const confidenceValue = parseFloat(confidenceSlider.value);
-            const isGoalkeeperNo = goalkeeperNo.checked;
-
-            if (confidenceValue == 0.5 && !isGoalkeeperNo) {
-                alert("Please pick a non-default value if you would like to run new detections, otherwise continue to Offside Detection.")
+            if (confidenceValue == 0.5) {
+                alert("Please pick a non-default value if you would like to run new detections, otherwise continue to Offside Detection.");
                 return;
-            }
-
-            else if (isGoalkeeperNo) {
-                for (let i = 0; i < detectionData.players_detections.class_name.length; i++) {
-                    if (detectionData.players_detections.class_name[i] === 'goalkeeper') {
-                        // Swap the class_id between 0 and 1
-                        detectionData.players_detections.class_id[i] = (detectionData.players_detections.class_id[i] === 1) ? 0 : 1;
-
-                        fetch("{% url 'update_detections' %}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": csrftoken
-                            },
-                            body: JSON.stringify(detectionData.players_detections)
-                        })
-                        .then(response => {
-                            // TODO: add alert
-                            return response.json();
-                        });
-                    }
-                }
-
-                adjustmentsOffCanvas.hide();
-                runImageDetection(null, false);
             }
             else {
                 adjustmentsOffCanvas.hide();
@@ -324,20 +350,53 @@
                 runImageDetection(formData, true);
             }
         }
-    })
+        else if (clickedBtn.id == "manualTeamChange") {
+            adjustmentsForm.style.display = "none";
+            const dynamicForm = generatePlayerTweaksForm(detectionData.players_detections);
+            tweaksForm.style.display = "block";
+            tweaksForm.appendChild(dynamicForm);
 
-    document.getElementById("confidenceSlider").addEventListener("input", function(event) {
-    document.getElementById("confidenceValue").textContent = event.target.value;
+            dynamicForm.addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                const updatedDetections = JSON.parse(JSON.stringify(detectionData.players_detections));
+
+                for (let i = updatedDetections.tracker_id.length - 1; i >= 0; i--) {
+                    const id = updatedDetections.tracker_id[i];
+                    const teamValue = dynamicForm.querySelector(`input[name="team_${id}"]:checked`).value;
+                    const deleteChecked = dynamicForm.querySelector(`#delete_${id}`).checked;
+
+                    if (deleteChecked) {
+                        ['tracker_id', 'class_id', 'class_name', 'confidence'].forEach(field => {
+                            updatedDetections[field].splice(i, 1);
+                        });
+                        detectionData.players_xy.xy.splice(i, 1);
+                    } else {
+                        updatedDetections.class_id[i] = parseInt(teamValue);
+                    }
+                }
+
+                detectionData.players_detections = updatedDetections;
+
+                fetch("{% url 'update_detections' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrftoken
+                    },
+                    body: JSON.stringify(detectionData.players_detections)
+                })
+                .then(response => response.json());
+                adjustmentsForm.style.display = "block";
+                tweaksForm.style.display = "none";
+
+                showAlert("Object detection updated successfully!", "success")
+
+                adjustmentsOffCanvas.hide();
+                runImageDetection(null, false);
+            });
+        }
     });
-
-    adjustmentsMenu.addEventListener('shown.bs.offcanvas', function () {
-        document.body.style.overflow = 'hidden';
-    });
-
-    adjustmentsMenu.addEventListener('hidden.bs.offcanvas', function () {
-        document.body.style.overflow = '';
-    });
-
 </script>
 
 {% endblock %}
