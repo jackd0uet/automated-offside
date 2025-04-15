@@ -248,6 +248,7 @@ adjustmentsForm.addEventListener("submit", function(event) {
         }
     }
     else if (clickedBtn.id == "manualTeamChange") {
+        // TODO: implement ability to select goalkeeper from detections
         adjustmentsForm.style.display = "none";
         const dynamicForm = generatePlayerTweaksForm(detectionData.players_detections);
         tweaksForm.style.display = "block";
