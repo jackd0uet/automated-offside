@@ -61,19 +61,13 @@ class OffsideClassification():
         }
 
     def __get_second_defender(self, team_xy):
-        highest = [-1, -float('inf')]
-        second_highest = [-2,-float('inf')]
+        sorted_team = sorted(enumerate(team_xy), key=lambda x: x[1][0], reverse=True)
 
-        for i, coords in enumerate(team_xy):
-            x_value = coords[0]
-            
-            if x_value > highest[1]:
-                second_highest = highest
-                highest = [i, x_value]
-            elif x_value > second_highest[1] and x_value != highest[1]:
-                second_highest = [i, x_value]
-
-        return second_highest[0], team_xy[second_highest[0]]
+        if len(sorted_team) >= 2:
+            second_defender_index = sorted_team[1][0]
+            return second_defender_index, team_xy[second_defender_index]
+        else:
+            return None, None
 
     def __setup_offside_status(self):
         for idx in range(len(self.attackers)):

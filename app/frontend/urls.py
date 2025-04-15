@@ -1,6 +1,6 @@
 from django.contrib.auth.views import LogoutView
 from django.urls import path
-from .views import index, login_view, upload_image, logs_view, object_detection_detail, process_image, render_pitch_view, classify_offside, display_offside, store_offside
+from .views import *
 
 urlpatterns = [
     path("", index, name="index"),
@@ -14,4 +14,5 @@ urlpatterns = [
     path("classify_offside/", classify_offside, name="classify_offside"),
     path("display_offside/", display_offside, name="display_offside"),
     path("store_offside/", store_offside, name="store_offside"),
+    path("update_detections/", update_detections, name="update_detections")
 ]

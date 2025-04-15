@@ -292,6 +292,19 @@
                     if (detectionData.players_detections.class_name[i] === 'goalkeeper') {
                         // Swap the class_id between 0 and 1
                         detectionData.players_detections.class_id[i] = (detectionData.players_detections.class_id[i] === 1) ? 0 : 1;
+
+                        fetch("{% url 'update_detections' %}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": csrftoken
+                            },
+                            body: JSON.stringify(detectionData.players_detections)
+                        })
+                        .then(response => {
+                            // TODO: add alert
+                            return response.json();
+                        });
                     }
                 }
 

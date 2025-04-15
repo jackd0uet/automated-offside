@@ -16,7 +16,7 @@ import requests
 import traceback
 
 from .models import OffsideDecision, ObjectDetection
-from .utils import render_offside, render_pitch, format_json
+from .utils import *
 
 logging = logging.getLogger(__name__)
 
@@ -265,9 +265,31 @@ def store_offside(request):
                 time_uploaded=time_uploaded,
                 time_decided=decision_time
             )
+            decision_id = OffsideDecision.objects.latest('id').id
 
-            return JsonResponse({'success': f"Offside decision successfully saved"}, status=200)
+            logging.warning(f"Store offside successful, with id: {decision_id}")
+
+            return JsonResponse({'decision_id': decision_id}, status=200)
 
         except Exception as e:
             logging.error(f"Error saving decision: {traceback.format_exc()}")
             return JsonResponse({'error': f"Failed to save decision: {str(e)}"}, status=500)
+
+def update_detections(request):
+    if request.method == "POST":
+        try:
+            request_data = request.body.decode('utf-8')
+            request_data = request_data.replace("'", '"')
+            new_data = json.loads(request_data)
+
+            detection_id = request.session.get('object_detection_id')
+
+            detection = ObjectDetection.objects.get(id=detection_id)
+            detection.players_detections = json.dumps(new_data)
+            detection.save()
+
+            return JsonResponse({'success': f"Detection: {detection_id} successfully updated!"}, status=200)
+
+        except Exception as e:
+            logging.error(f"Failed to update detection:{detection_id}, reason: {traceback.format_exc()}")
+            return JsonResponse({'error': f"Couldn't update detection:{detection_id}: {str(e)}"})

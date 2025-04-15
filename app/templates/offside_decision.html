@@ -117,7 +117,14 @@
             if (!response.ok) {
                 throw new Error("Failed to save image");
             }
-            showAlert("Offside decision saved successfully!", "success")
+            return response.json();
+        })
+        .then(data => {
+            decisionId = data.decision_id
+            showAlert("Offside decision saved successfully!", "success");
+        })
+        .catch(error => {
+            console.error("Error saving decision:", error)
         })
     });
 </script>

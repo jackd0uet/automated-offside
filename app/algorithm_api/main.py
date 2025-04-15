@@ -1,3 +1,4 @@
+import base64
 import cv2
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, Form, Request
@@ -79,6 +80,7 @@ async def detection(
         refs_xy = visualization.transform_points(referees_detections)
 
         try:
+            image.file.seek(0)
             with open(file_location, "wb") as buffer:
                 shutil.copyfileobj(image.file, buffer)
         except Exception as e:
@@ -142,3 +144,30 @@ async def offside_classification(request: Request):
     except Exception as e:
         logging.error(f"Error during offside classification: {traceback.format_exc()}")
         return JSONResponse({"error": f"Failed to determine offside: {str(e)}"}, status_code=500)
+
+@app.post("/image_picker/")
+async def pick_image(request: Request):
+    try:
+        data = await request.json()
+        file_path = data['file_path'].strip('"')
+
+        BASE_DIR = os.path.dirname(__file__)
+        abs_path = os.path.join(BASE_DIR, file_path)
+
+        if not os.path.exists(abs_path):
+            raise FileNotFoundError(f"File not found: {abs_path}")
+
+        image = cv2.imread(abs_path)
+        if image is None:
+            raise ValueError(f"Could not read image from path: {abs_path}")
+
+        _, buffer = cv2.imencode('.jpg', image)
+        image_base64 = base64.b64encode(buffer).decode('utf-8')
+
+        return JSONResponse({
+            'image': image_base64
+        })
+
+    except Exception as e:
+        logging.error(f"Error during image retrieval: {traceback.format_exc()}")
+        return JSONResponse({"error": f"Failed to retrieve image: {str(e)}"}, status_code=500)
