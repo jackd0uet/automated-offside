@@ -33,8 +33,8 @@ class OffsideClassification():
         team_1_indices = np.where(class_ids == 1)[0]
         goalkeeper_indices = np.where(np.char.equal(class_names, 'goalkeeper'))[0]
 
-        if goalkeeper_indices == 0:
-            return ValueError("No goalkeeper detected, fallback behavior not implemented.")
+        if goalkeeper_indices.size == 0:
+            raise ValueError("No goalkeeper detected, fallback behavior not implemented.")
 
         # For now, assume the first goalkeeper detected is what we are interested in.
         goalkeeper_index = goalkeeper_indices[0]
