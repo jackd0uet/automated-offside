@@ -56,7 +56,7 @@ def upload_image(request):
 
 @login_required
 def logs_view(request):
-    offside_decisions = OffsideDecision.objects.all()
+    offside_decisions = OffsideDecision.objects.all().order_by('-time_uploaded')
 
     preset = request.GET.get("preset")
     start_date = request.GET.get("start_date")
