@@ -34,15 +34,12 @@ confidenceSlider.addEventListener("input", function(event) {
     confidenceValue.textContent = event.target.value;
 });
 
-// TODO: fix progress bar
 function startProgressBar() {
     // Show progress bar
     progressBar.style.width = "0%";
     progressBar.textContent = "0%";
     progressContainer.style.display = "block";
     progressContainer.classList.add("show");
-
-    let progress = 0;
     
     progressInterval = setInterval(() => {
         let width = parseInt(progressBar.style.width);
@@ -314,7 +311,6 @@ adjustmentsForm.addEventListener("submit", async function(event) {
                     ['tracker_id', 'class_id', 'class_name', 'confidence'].forEach(field => {
                         updatedDetections[field].splice(i, 1);
                     });
-                    // TODO: confirm this is working
                     updatedPlayersXY.xy.splice(i, 1);
                     updatedPlayersXY.tracker_id.splice(i, 1);
                 } else {
