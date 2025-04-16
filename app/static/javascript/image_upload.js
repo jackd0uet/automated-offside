@@ -63,7 +63,7 @@ function stopProgressBar() {
 function runImageDetection(formData, overwriteDetection) {
     startProgressBar();
     runDetectionBtn.disabled = true;
-    runDetectionBtn.textContent = "Detection in progress...";
+    runDetectionBtn.textContent = "Visualization in progress...";
 
     let detectionPromise;
 
