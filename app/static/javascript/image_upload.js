@@ -333,6 +333,7 @@ adjustmentsForm.addEventListener("submit", async function(event) {
             .then(response => response.json());
             adjustmentsForm.style.display = "block";
             tweaksForm.style.display = "none";
+            tweaksForm.removeChild(dynamicForm);
 
             showAlert("Object detection updated successfully!", "success")
 
