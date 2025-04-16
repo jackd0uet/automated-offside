@@ -51,7 +51,7 @@ class OffsideClassification():
 
         return attackers, defenders
 
-    # TODO: add to database diagram
+    # TODO: add to class diagram
     def __get_team_detections(self, indices):
         return {
             'xyxy': self.players_detections['xyxy'][indices],

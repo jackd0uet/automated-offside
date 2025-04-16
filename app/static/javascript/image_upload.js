@@ -34,6 +34,7 @@ confidenceSlider.addEventListener("input", function(event) {
     confidenceValue.textContent = event.target.value;
 });
 
+// TODO: fix progress bar
 function startProgressBar() {
     // Show progress bar
     progressBar.style.width = "0%";
@@ -162,6 +163,10 @@ function generatePlayerTweaksForm(players) {
                 <input class="form-check-input" type="checkbox" id="delete_${id}" name="delete_${id}">
                 <label class="form-check-label text-danger" for="delete_${id}">Delete</label>
             </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="goalkeeper_${id}" name="goalkeeper_${id}" ${className === "goalkeeper" ? "checked" : ""}>
+                <label class="form-check-label text-warning" for="goalkeeper_${id}">Goalkeeper</label>
+            </div>
             <hr/>
         `;
         form.appendChild(playerDiv);
@@ -282,7 +287,6 @@ adjustmentsForm.addEventListener("submit", async function(event) {
         }
     }
     else if (clickedBtn.id == "manualTeamChange") {
-        // TODO: implement ability to select goalkeeper from detections
         adjustmentsForm.style.display = "none";
         const dynamicForm = generatePlayerTweaksForm(detectionData.players_detections);
         tweaksForm.style.display = "block";
@@ -297,11 +301,19 @@ adjustmentsForm.addEventListener("submit", async function(event) {
                 const id = updatedDetections.tracker_id[i];
                 const teamValue = dynamicForm.querySelector(`input[name="team_${id}"]:checked`).value;
                 const deleteChecked = dynamicForm.querySelector(`#delete_${id}`).checked;
+                const goalkeeperChecked = dynamicForm.querySelector(`#goalkeeper_${id}`).checked;
+
+                if (goalkeeperChecked) {
+                    updatedDetections['class_name'][i] = 'goalkeeper'
+                } else {
+                    updatedDetections['class_name'][i] = 'player'
+                }
 
                 if (deleteChecked) {
                     ['tracker_id', 'class_id', 'class_name', 'confidence'].forEach(field => {
                         updatedDetections[field].splice(i, 1);
                     });
+                    // TODO: confirm this is working
                     detectionData.players_xy.xy.splice(i, 1);
                 } else {
                     updatedDetections.class_id[i] = parseInt(teamValue);
