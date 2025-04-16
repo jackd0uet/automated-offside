@@ -17,7 +17,9 @@ const runDetectionBtn = document.getElementById("runDetectionBtn");
 const adjustmentsMenu = document.getElementById("adjustmentsMenu");
 const adjustmentsForm = document.getElementById("adjustmentsForm");
 const tweaksForm = document.getElementById("tweaksForm");
+
 const confidenceSlider = document.getElementById("confidenceSlider");
+const confidenceValue = document.getElementById("confidenceValue");
 
 const defendingForm = document.getElementById("defendingForm");
 
@@ -27,6 +29,10 @@ const adjustmentsOffCanvas = new bootstrap.Offcanvas(adjustmentsMenu, {
 
 let detectionData = null;
 let defending_team = null;
+
+confidenceSlider.addEventListener("input", function(event) {
+    confidenceValue.textContent = event.target.value;
+});
 
 function startProgressBar() {
     // Show progress bar
@@ -270,7 +276,7 @@ adjustmentsForm.addEventListener("submit", async function(event) {
 
             const formData = new FormData();
             formData.append("image", imageInput.files[0]);
-            formData.append("confidence", confidenceSlider.value);
+            formData.append("confidence", confidenceSlider.value.toString());
 
             runImageDetection(formData, true);
         }

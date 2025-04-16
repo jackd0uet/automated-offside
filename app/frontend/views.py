@@ -114,10 +114,7 @@ def process_image(request):
     if request.method == "POST" and request.FILES.get("image"):
         request.session['time_uploaded'] = str(now())
         image_file = request.FILES['image']
-        confidence = 0.5
-
-        if request.FILES.get("confidence"):
-            confidence = request.POST['confidence']
+        confidence = request.POST.get('confidence', 0.5)
 
         url = "http://127.0.0.1:8002/object-detection/"
         files = {'image': image_file}

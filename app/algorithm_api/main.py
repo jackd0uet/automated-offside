@@ -35,16 +35,27 @@ def read_root():
     return {"message": "Algorithm API is running"}
 
 @app.post("/object-detection/")
-async def detection(
-    image: UploadFile = File(...),
-    confidence: float = Form(0.5)
-):
-    classification_helper = ClassificationHelper()
-
-    if confidence != 0.5:
-        object_detection.threshold = confidence
-
+async def detection(request: Request):
     try:
+        form = await request.form()
+
+        classification_helper = ClassificationHelper()
+
+        confidence_str = form.get("confidence", "0.5")
+        try:
+            confidence = float(confidence_str)
+        except ValueError:
+            return JSONResponse(content={"error": "Invalid confidence value"}, status_code=400)
+
+        if confidence != 0.5:
+            object_detection.threshold = confidence
+            key_point_detection.confidence = confidence
+
+        image: UploadFile = form.get("image")
+
+        if image is None:
+            return JSONResponse(content={"error": "Image is required"}, status_code=400)
+
         file_location = UPLOAD_DIR / image.filename
 
         contents = await image.read()

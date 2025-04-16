@@ -3,14 +3,15 @@ import os
 import supervision as sv
 
 class KeyPointDetection():
-    def __init__(self, model_id=None):
+    def __init__(self, model_id=None, confidence = 0.5):
         self.token = os.environ.get("ROBOFLOW_API_KEY")
         self.model_id = "football-field-detection-f07vi/14" if model_id == None else model_id
+        self.confidence = confidence
 
         if self.token and self.model_id:
             self.model = get_model(model_id=self.model_id, api_key=self.token)
     
-    def detect(self, image, confidence=0.5):
+    def detect(self, image):
         if not hasattr(self, 'model'):
             raise AttributeError("The KeyPointDetection model has not been loaded correctly.")         
 
@@ -18,6 +19,6 @@ class KeyPointDetection():
 
         key_points = sv.KeyPoints.from_inference(result)
 
-        conf_filter = key_points.confidence[0] > confidence
+        conf_filter = key_points.confidence[0] > self.confidence
 
         return conf_filter, key_points
