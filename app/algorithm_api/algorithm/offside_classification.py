@@ -41,7 +41,6 @@ class OffsideClassification():
             goalkeeper_team = class_ids[goalkeeper_index]
 
             self.defending_team = goalkeeper_team
-       
 
         attacking_indices = team_1_indices if self.defending_team == 0 else team_0_indices
         defending_indices = team_0_indices if self.defending_team == 0 else team_1_indices
@@ -84,9 +83,8 @@ class OffsideClassification():
         self.__setup_offside_status()
 
         player_count = 0
-
         for player_pos in attacking_xy:
-            if player_pos[0] > second_defender_xy[0]:
+            if second_defender_index != None and player_pos[0] > second_defender_xy[0]:
                 self.offside_objects[player_count]['offside'] = True
             self.offside_objects[player_count]['tracker_id'] = self.attackers.tracker_id[player_count]
             player_count += 1
