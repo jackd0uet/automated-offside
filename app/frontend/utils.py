@@ -9,9 +9,13 @@ import supervision as sv
 
 config = SoccerPitchConfiguration()
 
-def draw_legend(image, legend):
+def draw_legend(image, legend, orientation='left'):
     # TODO: move legend to other side if players are taking up the space
     x_start, y_start = 300, 100
+
+    if orientation == 'right':
+        x_start = image.shape[1] - 300
+
     spacing =  50
     radius = 10
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -121,6 +125,11 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
         radius=16,
         pitch=annotated_image)
 
+    # Determine which side the legend should be on
+    avg_x = np.mean(players_xy['xy'][:, 0])
+
+    orientation = 'right' if avg_x < config.length / 2 else 'left'
+
     # Legend
     legend = [
         ('Ball', sv.Color.WHITE),
@@ -128,7 +137,7 @@ def render_pitch(ball_xy, players_xy, refs_xy, players_detections):
         ('Team B', sv.Color.from_hex('FF1493')),
         ('Referee', sv.Color.from_hex('FFD700')),
     ]
-    annotated_image = draw_legend(annotated_image, legend)
+    annotated_image = draw_legend(annotated_image, legend, orientation)
 
     return annotated_image
 
@@ -178,6 +187,11 @@ def render_offside(ball_xy, players_xy, refs_xy, classification_result):
         radius=16,
         pitch=annotated_image)
 
+    # Determine which side the legend should be on
+    avg_x = np.mean(players_xy['xy'][:, 0])
+
+    orientation = 'right' if avg_x < config.length / 2 else 'left'
+
     legend = [
         ('Ball', sv.Color.WHITE),
         ('Defending Team', sv.Color.from_hex('00BFFF')),
@@ -186,7 +200,7 @@ def render_offside(ball_xy, players_xy, refs_xy, classification_result):
         ('Referee', sv.Color.from_hex('FFD700')),
     ]
 
-    annotated_image = draw_legend(annotated_image, legend)
+    annotated_image = draw_legend(annotated_image, legend, orientation)
 
     return annotated_image
 

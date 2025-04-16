@@ -98,7 +98,6 @@ async def detection(request: Request):
             logging.warning(f"Image saving failed: {traceback.format_exc()}")
 
         # Return processed data
-        # TODO: use convert_to_serializable here
         response = {
             'ball_xy': {
                 "tracker_id": ball_detections.tracker_id.tolist(),
