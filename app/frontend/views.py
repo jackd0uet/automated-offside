@@ -288,14 +288,18 @@ def store_offside(request):
 def update_detections(request):
     if request.method == "POST":
         try:
+            detection_id = request.session.get('object_detection_id')
+
             request_data = request.body.decode('utf-8')
             request_data = request_data.replace("'", '"')
             new_data = json.loads(request_data)
 
-            detection_id = request.session.get('object_detection_id')
+            players_detections = new_data['players_detections']
+            players_xy = new_data['players_xy']
 
             detection = ObjectDetection.objects.get(id=detection_id)
-            detection.players_detections = json.dumps(new_data)
+            detection.players_detections = json.dumps(players_detections)
+            detection.players_xy = json.dumps(players_xy)
             detection.save()
 
             return JsonResponse({'success': f"Detection: {detection_id} successfully updated!"}, status=200)

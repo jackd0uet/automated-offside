@@ -296,6 +296,7 @@ adjustmentsForm.addEventListener("submit", async function(event) {
             event.preventDefault();
 
             const updatedDetections = JSON.parse(JSON.stringify(detectionData.players_detections));
+            const updatedPlayersXY = JSON.parse(JSON.stringify(detectionData.players_xy));
 
             for (let i = updatedDetections.tracker_id.length - 1; i >= 0; i--) {
                 const id = updatedDetections.tracker_id[i];
@@ -314,13 +315,15 @@ adjustmentsForm.addEventListener("submit", async function(event) {
                         updatedDetections[field].splice(i, 1);
                     });
                     // TODO: confirm this is working
-                    detectionData.players_xy.xy.splice(i, 1);
+                    updatedPlayersXY.xy.splice(i, 1);
+                    updatedPlayersXY.tracker_id.splice(i, 1);
                 } else {
                     updatedDetections.class_id[i] = parseInt(teamValue);
                 }
             }
 
             detectionData.players_detections = updatedDetections;
+            detectionData.players_xy = updatedPlayersXY;
 
             fetch(updateDetectionsUrl, {
                 method: "POST",
@@ -328,7 +331,7 @@ adjustmentsForm.addEventListener("submit", async function(event) {
                     "Content-Type": "application/json",
                     "X-CSRFToken": csrftoken
                 },
-                body: JSON.stringify(detectionData.players_detections)
+                body: JSON.stringify(detectionData)
             })
             .then(response => response.json());
             adjustmentsForm.style.display = "block";
