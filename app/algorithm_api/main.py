@@ -119,12 +119,9 @@ async def detection(
 
 @app.post("/offside-classification/")
 async def offside_classification(request: Request):
-    # TODO: work out why this is returning the wrong image
     try:
         data = await request.body()
         data = json.loads(data.decode("utf-8"))
-
-        logging.warning(f"Offside classification endpoint received: {data}")
 
         players_detections_data = data['detection_data']['players_detections']
         defending_team = data['defending_team']

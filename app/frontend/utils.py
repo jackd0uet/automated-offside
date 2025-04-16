@@ -216,9 +216,13 @@ def get_plottables(classification_result, players_xy):
     return defenders_xy, offside_xy, onside_xy
 
 def format_json(data):
-    ball_xy = {
-                'tracker_id': np.array(data['ball_xy']['tracker_id']),
-                'xy': np.array(data['ball_xy']['xy']),
+    ball_xy = {}
+    refs_xy = {}
+
+    if 'ball_xy' in data:
+        ball_xy = {
+                    'tracker_id': np.array(data['ball_xy']['tracker_id']),
+                    'xy': np.array(data['ball_xy']['xy']),
             }
 
     players_xy = {
@@ -226,10 +230,11 @@ def format_json(data):
         'xy': np.array(data['players_xy']['xy']),
     }
 
-    refs_xy = {
-        'tracker_id': np.array(data['refs_xy']['tracker_id']),
-        'xy': np.array(data['refs_xy']['xy']),
-    }
+    if 'refs_xy' in data:
+        refs_xy = {
+            'tracker_id': np.array(data['refs_xy']['tracker_id']),
+            'xy': np.array(data['refs_xy']['xy']),
+        }
 
     players_detections = {
         'xyxy': np.array(data['players_detections']['xyxy']),

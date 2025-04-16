@@ -201,9 +201,9 @@ def classify_offside(request):
 def render_offside_view(request):
     try:
         classification_result = request.session.get('classification_result', None)
-        data = request.session.get('POST_data')
+        detection_data = request.session.get('POST_data')['detection_data']
 
-        ball_xy, players_xy, refs_xy, _ = format_json(data)
+        ball_xy, players_xy, refs_xy, _ = format_json(detection_data)
 
         image = render_offside(
             ball_xy,
