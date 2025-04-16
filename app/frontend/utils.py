@@ -10,7 +10,6 @@ import supervision as sv
 config = SoccerPitchConfiguration()
 
 def draw_legend(image, legend, orientation='left'):
-    # TODO: move legend to other side if players are taking up the space
     x_start, y_start = 300, 100
 
     if orientation == 'right':

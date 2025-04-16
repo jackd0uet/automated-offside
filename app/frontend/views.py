@@ -54,7 +54,6 @@ def login_view(request):
 def upload_image(request):
     return render(request, "image_upload.html")
 
-# TODO: make this an admin only feature
 @login_required
 def logs_view(request):
     offside_decisions = OffsideDecision.objects.all()
@@ -103,8 +102,22 @@ def logs_view(request):
 def object_detection_detail(request, id, time_uploaded):
     detection = get_object_or_404(ObjectDetection, id=id)
 
+    data = {
+        'players_detections': json.loads(detection.players_detections),
+        'players_xy': json.loads(detection.players_xy),
+        'ball_xy': json.loads(detection.ball_xy),
+        'refs_xy': json.loads(detection.refs_xy)
+    }
+
+    ball_xy, players_xy, refs_xy, players_detections = format_json(data)
+
+    image = render_pitch(ball_xy, players_xy, refs_xy, players_detections)
+    _, buffer = cv2.imencode('.jpg', image)
+    image_bytes = buffer.tobytes()
+    encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+
     context = {
-        'detection': detection,
+        'detection_image': encoded_image,
         'detection_time': time_uploaded
     }
 
