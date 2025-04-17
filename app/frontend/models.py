@@ -9,11 +9,11 @@ class DecisionChoices(models.TextChoices):
 
 class ObjectDetection(models.Model):
     id = models.AutoField(db_column='id', primary_key=True)
-    players_detections = models.CharField(db_column='players_detections', max_length=4096)
-    players_xy = models.CharField(db_column='players_xy', max_length=4096)
-    ball_xy = models.CharField(db_column='ball_xy', max_length=4096)
-    refs_xy = models.CharField(db_column='refs_xy', max_length=4096)
-    file_path = models.CharField(db_column='file_path', null=False, blank=False, max_length=4096)
+    players_detections = models.TextField(db_column='players_detections')
+    players_xy = models.TextField(db_column='players_xy')
+    ball_xy = models.TextField(db_column='ball_xy')
+    refs_xy = models.TextField(db_column='refs_xy')
+    file_path = models.FileField(db_column='file_path', null=False, blank=False)
 
     class Meta:
         managed = True
