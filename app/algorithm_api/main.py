@@ -1,7 +1,7 @@
 import base64
 import cv2
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi import FastAPI, UploadFile, Request
 from fastapi.responses import JSONResponse
 import json
 import logging
@@ -27,6 +27,7 @@ app = FastAPI()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# Initialise these outside of calls to the API, improves speed of calls.
 object_detection = ObjectDetection(weights_directory="weights")
 key_point_detection = KeyPointDetection()
 
@@ -37,16 +38,20 @@ def read_root():
 @app.post("/object-detection/")
 async def detection(request: Request):
     try:
+        # At the moment form is only confidence but could accept more user control later.
         form = await request.form()
 
+        # Instantiate classification helper now, there were some weird persistence issues if started earlier.
         classification_helper = ClassificationHelper()
 
+        # Handle confidence value.
         confidence_str = form.get("confidence", "0.5")
         try:
             confidence = float(confidence_str)
         except ValueError:
             return JSONResponse(content={"error": "Invalid confidence value"}, status_code=400)
 
+        # Set confidence if user has inputted a new one.
         if confidence != 0.5:
             object_detection.threshold = confidence
             key_point_detection.confidence = confidence
@@ -56,8 +61,10 @@ async def detection(request: Request):
         if image is None:
             return JSONResponse(content={"error": "Image is required"}, status_code=400)
 
+        # Prep for image storage.
         file_location = UPLOAD_DIR / image.filename
 
+        # Image pre-processing
         contents = await image.read()
         np_image = np.frombuffer(contents, np.uint8)
         decoded_image = cv2.imdecode(np_image, cv2.IMREAD_COLOR)
@@ -90,6 +97,8 @@ async def detection(request: Request):
         players_xy = visualization.transform_points(players_detections)
         refs_xy = visualization.transform_points(referees_detections)
 
+        # Save uploaded image for future reference.
+        # Note: this stores locally currently but could be stored on a server in future.
         try:
             image.file.seek(0)
             with open(file_location, "wb") as buffer:
@@ -130,12 +139,15 @@ async def detection(request: Request):
 @app.post("/offside-classification/")
 async def offside_classification(request: Request):
     try:
+        # Get data passed into POST request.
         data = await request.body()
         data = json.loads(data.decode("utf-8"))
 
+        # Split data.
         players_detections_data = data['detection_data']['players_detections']
         defending_team = data['defending_team']
 
+        # Assemble detections object.
         players_detections = {
             'xyxy': np.array(players_detections_data['xyxy']),
             'confidence': np.array(players_detections_data['confidence']),
@@ -144,9 +156,11 @@ async def offside_classification(request: Request):
             'class_name': np.array(players_detections_data['class_name'], dtype=str),
         }
 
+        # Run detections through Offside Classification.
         classification_helper = OffsideClassification(players_detections, defending_team)
         offside_status, second_defender = classification_helper.classify()
 
+        # Return object with offside status for each player and the tracker id for the second defender.
         return JSONResponse(content=convert_to_serializable({
             'offside_status': offside_status,
             'second_defender': {
@@ -160,6 +174,7 @@ async def offside_classification(request: Request):
 
 @app.post("/image_picker/")
 async def pick_image(request: Request):
+    # Note: this is not currently in use but could be used in future for rendering offside line on uploaded image.
     try:
         data = await request.json()
         file_path = data['file_path'].strip('"')

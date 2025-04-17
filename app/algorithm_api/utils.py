@@ -1,6 +1,7 @@
 import numpy as np
 
 def convert_to_serializable(obj):
+    ''' This function is for formatting objects created by classification, detection and helper classes for JSON output. '''
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, np.integer):
