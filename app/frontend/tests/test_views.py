@@ -60,8 +60,11 @@ class ViewsTestCase(TestCase):
 
     def test_object_detection_detail(self):
         detection = ObjectDetection.objects.create(
-            players_detections="[]", players_xy="[]", ball_xy="[]",
-            refs_xy="[]", file_path="[]"
+            players_detections='{"xyxy": [],"confidence": [],"class_name": [],"class_id": [],"tracker_id": []}',
+            players_xy='{"tracker_id": [1], "xy": [[100, 50]]}',
+            ball_xy='{"tracker_id": [], "xy": []}',
+            refs_xy='{"tracker_id": [], "xy": []}',
+            file_path='[]'
         )
         response = self.client.get(reverse('object_detection_detail', args=[detection.id, 'now']))
         self.assertEqual(response.status_code, 200)
@@ -171,4 +174,4 @@ class ViewsTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn('success', response.json())
+        self.assertIn('decision_id', response.json())
