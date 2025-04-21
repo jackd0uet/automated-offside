@@ -16,7 +16,7 @@ from algorithm.classification_helper import ClassificationHelper
 from algorithm.key_point_detection import KeyPointDetection
 from algorithm.object_detection import ObjectDetection
 from algorithm.offside_classification import OffsideClassification
-from algorithm.visualization_helper import VisualizationHelper
+from algorithm.visualisation_helper import VisualisationHelper
 
 from utils import convert_to_serializable
 
@@ -89,13 +89,13 @@ async def detection(request: Request):
 
         referees_detections.class_id -= 1
 
-        # Field detection & visualization
+        # Field detection & visualisation
         conf_filter, key_points = key_point_detection.detect(image=decoded_image)
-        visualization = VisualizationHelper(conf_filter=conf_filter, key_points=key_points)
+        visualisation = VisualisationHelper(conf_filter=conf_filter, key_points=key_points)
 
-        ball_xy = visualization.transform_points(ball_detections)
-        players_xy = visualization.transform_points(players_detections)
-        refs_xy = visualization.transform_points(referees_detections)
+        ball_xy = visualisation.transform_points(ball_detections)
+        players_xy = visualisation.transform_points(players_detections)
+        refs_xy = visualisation.transform_points(referees_detections)
 
         # Save uploaded image for future reference.
         # Note: this stores locally currently but could be stored on a server in future.

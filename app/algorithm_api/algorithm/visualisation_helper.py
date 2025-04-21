@@ -3,7 +3,7 @@ from sports.common.view import ViewTransformer
 from sports.configs.soccer import SoccerPitchConfiguration
 import supervision as sv
 
-class VisualizationHelper():
+class VisualisationHelper():
     '''
     This class acts as an interface for the Sports SoccerPitch rendering.
     '''
