@@ -1,6 +1,11 @@
 [run]
-source = app
+source =
+    app/frontend
+    app/algorithm_api
 omit = 
     */migrations/*
     */tests/*
     */test_*.py
+    */__init__.py
+    app/offside/asgi.py
+    app/offside/wsgi.py
