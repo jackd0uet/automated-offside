@@ -1,7 +1,5 @@
 [run]
-source =
-    app/frontend
-    app/algorithm_api
+source = app
 omit = 
     */migrations/*
     */tests/*
