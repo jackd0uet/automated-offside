@@ -49,6 +49,7 @@ def test_object_detection():
     assert isinstance(response_json["ball_xy"]["tracker_id"], list)
     assert isinstance(response_json["ball_xy"]["xy"], list)
 
+# Test object detection 400 on string confidence input
 def test_object_detection_bad_confidence():
     image = load_test_image()
     response = client.post(
@@ -59,6 +60,7 @@ def test_object_detection_bad_confidence():
 
     assert response.status_code == 400
 
+# Test object detection 400 on no image
 def test_object_detection_no_image():
     response = client.post(
         "/object-detection/",
@@ -67,7 +69,8 @@ def test_object_detection_no_image():
 
     assert response.status_code == 400
 
-def test_image_saving_failure(caplog):
+# Test image saving failure (shutil error)
+def test_object_detection_image_saving_failure(caplog):
     with mock.patch("shutil.copyfileobj", side_effect=IOError("Simulated copy failure")):
         with caplog.at_level(logging.WARNING):
             image = load_test_image()
@@ -78,6 +81,18 @@ def test_image_saving_failure(caplog):
             )
 
         assert any("Image saving failed" in message for message in caplog.messages)
+
+# Test image decoding failure (invalid image format)
+def test_object_detection_invalid_image():
+    invalid_image = BytesIO(b"invalid_image_data")
+    response = client.post(
+        "/object-detection/",
+        files={"image": ("invalid_image.jpg", invalid_image, "image/jpeg")},
+        data={"confidence": 0.5}
+    )
+
+    assert response.status_code == 500
+    assert "error" in response.json()
 
 # Test for offside classification endpoint
 def test_offside_classification():
@@ -124,18 +139,6 @@ def test_offside_classification():
     assert "offside_status" in response_json
     assert "second_defender" in response_json
     assert "tracker_id" in response_json["second_defender"]
-
-# Test image decoding failure (invalid image format)
-def test_invalid_image():
-    invalid_image = BytesIO(b"invalid_image_data")
-    response = client.post(
-        "/object-detection/",
-        files={"image": ("invalid_image.jpg", invalid_image, "image/jpeg")},
-        data={"confidence": 0.5}
-    )
-    
-    assert response.status_code == 500
-    assert "error" in response.json()
 
 # Test offside classification with missing data
 def test_offside_classification_missing_data():
