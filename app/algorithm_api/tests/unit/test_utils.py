@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from .utils import convert_to_serializable
+from utils import convert_to_serializable
 
 # Test for convert to serializable success
 def test_convert_to_serializable():
