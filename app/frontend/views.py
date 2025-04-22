@@ -276,7 +276,7 @@ def store_offside(request):
             )
             decision_id = OffsideDecision.objects.latest('id').id
 
-            logging.warning(f"Store offside successful, with id: {decision_id}")
+            logging.info(f"Store offside successful, with id: {decision_id}")
 
             return JsonResponse({'decision_id': decision_id}, status=200)
 
@@ -305,4 +305,4 @@ def update_detections(request):
 
         except Exception as e:
             logging.error(f"Failed to update detection:{detection_id}, reason: {traceback.format_exc()}")
-            return JsonResponse({'error': f"Couldn't update detection:{detection_id}: {str(e)}"})
+            return JsonResponse({'error': f"Couldn't update detection:{detection_id}: {str(e)}"}, status=500)

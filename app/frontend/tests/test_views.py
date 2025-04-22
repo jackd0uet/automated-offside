@@ -1,5 +1,4 @@
-from django.test import TestCase, Client
-from django.test.client import RequestFactory
+from django.test import TestCase, Client, RequestFactory
 from django.urls import reverse
 from django.utils.timezone import now, make_aware
 from django.contrib.auth.models import User
@@ -23,8 +22,7 @@ def get_test_image():
     file.seek(0)
     return file
 
-class ViewsTestCase(TestCase):
-
+class IndexViewTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(username='tester', password='password')
@@ -37,6 +35,15 @@ class ViewsTestCase(TestCase):
     def test_index_view(self):
         response = self.client.get(reverse('index'))
         self.assertEqual(response.status_code, 200)
+
+class AuthenticationViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
 
     def test_login_view_get(self):
         self.client.logout()
@@ -60,9 +67,29 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "form")
 
+class UploadImageViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        self.client.login(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
+
     def test_upload_image_view(self):
         response = self.client.get(reverse('upload_image'))
         self.assertEqual(response.status_code, 200)
+
+class ObjectDetectionViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        self.client.login(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
 
     def test_object_detection_detail(self):
         detection = ObjectDetection.objects.create(
@@ -74,6 +101,16 @@ class ViewsTestCase(TestCase):
         )
         response = self.client.get(reverse('object_detection_detail', args=[detection.id, 'now']))
         self.assertEqual(response.status_code, 200)
+
+class RenderPitchViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        self.client.login(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
 
     @patch('cv2.imencode')
     @patch('frontend.views.render_pitch')
@@ -99,13 +136,23 @@ class ViewsTestCase(TestCase):
             data=json.dumps(data),
             content_type='application/json'
         )
-        
+
         self.assertEqual(response.status_code, 200)
 
     def test_render_pitch_view_failure(self):
         response = self.client.post(reverse('render_pitch'))
 
         self.assertEqual(response.status_code, 500)
+
+class RenderOffsideViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        self.client.login(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
 
     @patch('cv2.imencode')
     @patch('frontend.views.render_offside')
@@ -134,8 +181,18 @@ class ViewsTestCase(TestCase):
         request.session.save()
 
         render_offside_view(request)
-        
+
         self.assertIsNotNone(request.session['offside_radar_view'])
+
+class ClassifyOffsideViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        self.client.login(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
 
     def test_classify_offside_get_failure(self):
         response = self.client.get(reverse('classify_offside'))
@@ -156,7 +213,7 @@ class ViewsTestCase(TestCase):
                                     content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertIn('redirect_url', response.json())
-    
+
     @patch('requests.post')
     def test_classify_offside_failure(self, mock_post):
         mock_post.return_value = MagicMock(
@@ -176,6 +233,16 @@ class ViewsTestCase(TestCase):
                                     content_type='application/json')
         self.assertEqual(response.status_code, 400)
 
+class DisplayOffsideViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        self.client.login(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
+
     def test_display_offside_view(self):
         session = self.client.session
         session['classification_result'] = {'1': {'offside': True}, '2': {'offside': False}}
@@ -185,6 +252,16 @@ class ViewsTestCase(TestCase):
         response = self.client.get(reverse('display_offside'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Offside')
+
+class StoreOffsideViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='tester', password='password')
+        self.client.login(username='tester', password='password')
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
 
     def test_store_offside_success(self):
         detection = ObjectDetection.objects.create(
@@ -213,6 +290,15 @@ class ViewsTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('decision_id', response.json())
+
+    def test_store_offside_failure(self):
+        response = self.client.post(
+            reverse('store_offside'),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertIn('error', response.json())
 
 class ProcessImageViewTestCase(TestCase):
     def setUp(self):
@@ -296,9 +382,8 @@ class LogsViewTestCase(TestCase):
     def test_logs_view_last_week(self):
         """Test filtering offside decisions for the last week."""
         response = self.client.get(self.url, {'preset': 'last_week'})
-
         self.assertEqual(response.status_code, 200)
-        
+
         # Check that only the offside decisions from the last week are returned
         offside_decisions = response.context['offside_decisions']
         self.assertIn(self.offside1, offside_decisions)
@@ -309,29 +394,29 @@ class LogsViewTestCase(TestCase):
     def test_logs_view_last_month(self):
         """Test filtering offside decisions for the last month."""
         response = self.client.get(self.url, {'preset': 'last_month'})
-        
         self.assertEqual(response.status_code, 200)
-        
+
         # Check that only the offside decisions from the last 30 days are returned
         offside_decisions = response.context['offside_decisions']
         self.assertIn(self.offside1, offside_decisions)
         self.assertIn(self.offside2, offside_decisions)
         self.assertNotIn(self.offside3, offside_decisions)
         self.assertNotIn(self.offside4, offside_decisions)
-    
+
     def test_logs_view_last_year(self):
         """Test filtering offside decisions for the last year."""
         response = self.client.get(self.url, {'preset': 'last_year'})
-        
         self.assertEqual(response.status_code, 200)
-        
+
         # Check that only the offside decisions from the last 365 days are returned
         offside_decisions = response.context['offside_decisions']
+
         self.assertIn(self.offside1, offside_decisions)
         self.assertIn(self.offside2, offside_decisions)
         self.assertIn(self.offside3, offside_decisions)
         self.assertNotIn(self.offside4, offside_decisions)
-    
+
+
     def test_logs_view_start_date(self):
         response = self.client.get(reverse("logs"), {"start_date": "2025-04-01"})
         self.assertEqual(response.status_code, 200)
@@ -378,3 +463,40 @@ class LogsViewTestCase(TestCase):
         self.assertTrue(decisions.filter(pk=self.offside2.pk).exists())
         self.assertTrue(decisions.filter(pk=self.offside3.pk).exists())
         self.assertTrue(decisions.filter(pk=self.offside4.pk).exists())
+
+class UpdateDetectionsViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='update_detections_tester', password='password')
+        self.client.login(username='update_detections_tester', password='password')
+
+        self.session = self.client.session
+
+        self.session['object_detection_id'] = ObjectDetection.objects.create().id
+        self.session.save()
+        logging.disable(logging.ERROR)
+
+    def tearDown(self):
+        logging.disable(logging.NOTSET)
+
+    def test_update_detections_success(self):
+        response = self.client.post(
+            reverse('update_detections'),
+            {
+                'players_detections': "Some new detections",
+                'players_xy': "Some new XY data"
+            },
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_update_detections_failure(self):
+        self.session['object_detection_id'] = "Not a detection ID"
+
+        response = self.client.post(reverse('update_detections'), {
+            'players_detections': "Some new detections",
+            'players_xy': "Some new XY data"
+        })
+
+        self.assertEqual(response.status_code, 500)
