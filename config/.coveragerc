@@ -8,3 +8,4 @@ omit =
     app/offside/wsgi.py
     config.py
     config-3.py
+    /tmp/*
