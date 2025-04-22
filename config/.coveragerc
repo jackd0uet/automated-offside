@@ -1,5 +1,4 @@
 [run]
-source = .
 omit = 
     */migrations/*
     */tests/*
@@ -7,3 +6,5 @@ omit =
     */__init__.py
     app/offside/asgi.py
     app/offside/wsgi.py
+    config.py
+    config-3.py

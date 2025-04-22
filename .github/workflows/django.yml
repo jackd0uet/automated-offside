@@ -70,8 +70,8 @@ jobs:
           DEBUG: 1
       run: |
         cd app/algorithm_api
-        pytest --cov=algorithm --cov-report=xml --cov-config=config/.coveragerc --data-file=.coverage.api tests
-        cp .coverage.api ../../.coverage.api
+        pytest --cov --cov-config=../../config/.coveragerc tests
+        cp .coverage ../../.coverage.api
         cd ../../
 
     - name: Generate and output coverage report
