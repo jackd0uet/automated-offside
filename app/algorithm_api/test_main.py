@@ -1,12 +1,12 @@
-from fastapi.testclient import TestClient
-
 import sys
 sys.path.append('/Users/jackdouet/Development/auto-off/automated-offside/app/algorithm_api')
 
 from fastapi.testclient import TestClient
-import json
 from io import BytesIO
+import json
+import logging
 import os
+from unittest import mock
 
 from .main import app
 
@@ -48,6 +48,36 @@ def test_object_detection():
     # Ensure specific structure of the returned data
     assert isinstance(response_json["ball_xy"]["tracker_id"], list)
     assert isinstance(response_json["ball_xy"]["xy"], list)
+
+def test_object_detection_bad_confidence():
+    image = load_test_image()
+    response = client.post(
+        "/object-detection/",
+        files={"image": ("test_image.jpg", image, "image/jpeg")},
+        data={"confidence": 'this is a bad value'}
+    )
+
+    assert response.status_code == 400
+
+def test_object_detection_no_image():
+    response = client.post(
+        "/object-detection/",
+        data={"confidence": 0.6}
+    )
+
+    assert response.status_code == 400
+
+def test_image_saving_failure(caplog):
+    with mock.patch("shutil.copyfileobj", side_effect=IOError("Simulated copy failure")):
+        with caplog.at_level(logging.WARNING):
+            image = load_test_image()
+            client.post(
+                "/object-detection/",
+                files={"image": ("test_image.jpg", image, "image/jpeg")},
+                data={"confidence": 0.6}
+            )
+
+        assert any("Image saving failed" in message for message in caplog.messages)
 
 # Test for offside classification endpoint
 def test_offside_classification():
