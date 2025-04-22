@@ -151,7 +151,6 @@ def process_image(request):
         else:
             return JsonResponse({
                 "error": "Failed to process image",
-                "details": response.text
             }, status=500)
         
     return JsonResponse({"error": "No image provided"}, status=400)
