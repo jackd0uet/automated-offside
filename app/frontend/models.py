@@ -20,7 +20,7 @@ class ObjectDetection(models.Model):
         db_table = 'object_detection'
 
     def __str__(self) -> str:
-        return f"{self.id} | {self.players_detections} | {self.players_xy} | {self.ball_xy} | {self.refs_xy} | {self.file_path}"
+        return f"{self.id} | {self.file_path}"
 
 class OffsideDecision(models.Model):
     id = models.AutoField(db_column='id', primary_key=True)
@@ -36,5 +36,5 @@ class OffsideDecision(models.Model):
         db_table = 'offside_decision'
 
     def __str__(self) -> str:
-        return f"{self.id} | {self.detection_id}  |{self.algorithm_decision} | {self.final_decision} | {self.time_uploaded} | {self.time_decided}"
+        return f"{self.id} | {self.detection_id.id} | {self.algorithm_decision} | {self.final_decision} | {self.time_uploaded} | {self.time_decided}"
    

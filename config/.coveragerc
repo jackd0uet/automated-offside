@@ -4,6 +4,7 @@ omit =
     */tests/*
     */test_*.py
     */__init__.py
+    app/manage.py
     app/offside/asgi.py
     app/offside/wsgi.py
     config.py
