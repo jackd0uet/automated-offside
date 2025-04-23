@@ -271,15 +271,19 @@ class StoreOffsideViewTestCase(TestCase):
             refs_xy='[]',
             file_path='[]'
         )
+        expected_detection_id = detection.id
+        expected_time_uploaded = str(now())
+        expected_algo_decision = 'Offside'
+        expected_fin_decision = 'Onside'
 
         session = self.client.session
-        session['object_detection_id'] = detection.id
-        session['time_uploaded'] = str(now())
+        session['object_detection_id'] = expected_detection_id
+        session['time_uploaded'] = expected_time_uploaded
         session.save()
 
         data = {
-            'algorithm_decision': 'Offside',
-            'final_decision': 'Onside'
+            'algorithm_decision': expected_algo_decision,
+            'final_decision': expected_fin_decision,
         }
 
         response = self.client.post(
@@ -288,8 +292,15 @@ class StoreOffsideViewTestCase(TestCase):
             content_type='application/json'
         )
 
+        self.assertEqual(OffsideDecision.objects.count(), 1)
+        obj = OffsideDecision.objects.latest('id')
+
+        self.assertEqual(obj.detection_id.id, expected_detection_id)
+        self.assertEqual(obj.algorithm_decision, expected_algo_decision)
+        self.assertEqual(obj.final_decision, expected_fin_decision)
+        self.assertEqual(obj.time_uploaded, datetime.fromisoformat(expected_time_uploaded))
+
         self.assertEqual(response.status_code, 200)
-        self.assertIn('decision_id', response.json())
 
     def test_store_offside_failure(self):
         response = self.client.post(
@@ -299,6 +310,7 @@ class StoreOffsideViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertIn('error', response.json())
+        self.assertEqual(OffsideDecision.objects.count(), 0)
 
 class ProcessImageViewTestCase(TestCase):
     def setUp(self):
@@ -310,16 +322,23 @@ class ProcessImageViewTestCase(TestCase):
     def tearDown(self):
         logging.disable(logging.NOTSET)
 
-    @patch('requests.post')
+    @patch('frontend.views.requests.post')
     def test_process_image_success(self, mock_post):
+        expected_detections = [{'id': 1}]
+        expected_players_xy = [[100, 150]]
+        expected_ball_xy = [200, 250]
+        expected_refs_xy = [[50, 60]]
+        expected_file_path = 'test_path.jpg'
+
         mock_response = MagicMock()
         mock_response.status_code = 200
+
         mock_response.json.return_value = {
-            'players_detections': [],
-            'players_xy': [],
-            'ball_xy': [],
-            'refs_xy': [],
-            'file_path': ''
+            'players_detections': expected_detections,
+            'players_xy': expected_players_xy,
+            'ball_xy': expected_ball_xy,
+            'refs_xy': expected_refs_xy,
+            'file_path': expected_file_path
         }
         mock_post.return_value = mock_response
 
@@ -327,18 +346,35 @@ class ProcessImageViewTestCase(TestCase):
         response = self.client.post(reverse('process_image'), {'image': image})
         self.assertEqual(response.status_code, 200)
 
+        self.assertEqual(ObjectDetection.objects.count(), 1)
+        obj = ObjectDetection.objects.latest('id')
+
+        self.assertJSONEqual(obj.players_detections, expected_detections)
+        self.assertJSONEqual(obj.players_xy, expected_players_xy)
+        self.assertJSONEqual(obj.ball_xy, json.dumps(expected_ball_xy))
+        self.assertJSONEqual(obj.refs_xy, json.dumps(expected_refs_xy))
+        self.assertJSONEqual(obj.file_path.name, json.dumps(expected_file_path))
+
     @patch('requests.post')
     def test_process_image_failure(self, mock_post):
         mock_response = MagicMock()
         mock_response.status_code = 500
 
         image = get_test_image()
+
+        self.assertEqual(ObjectDetection.objects.count(), 0)
+
         response = self.client.post(reverse('process_image'), {'image': image})
         self.assertEqual(response.status_code, 500)
+        self.assertEqual(ObjectDetection.objects.count(), 0)
 
     def test_process_image_no_image(self):
+        self.assertEqual(ObjectDetection.objects.count(), 0)
+
         response = self.client.post(reverse('process_image'), {})
+
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(ObjectDetection.objects.count(), 0)
 
 class LogsViewTestCase(TestCase):
     def setUp(self):
