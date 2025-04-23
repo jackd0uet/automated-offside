@@ -6,9 +6,9 @@
 1.  Clone repository
 2.  CD into repository
 3.  Run `cp .env.example .env`
-4.  Populate the env file:
-    4.1 Create an account on Roboflow.
-    4.2 Follow these instructions to get your Roboflow API key:
+4.  Populate the env file:  
+    a. Create an account on Roboflow.  
+    b. Follow these instructions to get your Roboflow API key:
     https://docs.roboflow.com/api-reference/authentication
 5.  Run `pip install -r requirements.txt`
 5.  Run `cd app && python manage.py runserver`
