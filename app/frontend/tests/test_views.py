@@ -77,9 +77,16 @@ class UploadImageViewTestCase(TestCase):
     def tearDown(self):
         logging.disable(logging.NOTSET)
 
-    def test_upload_image_view(self):
+    def test_upload_image_view_success(self):
         response = self.client.get(reverse('upload_image'))
         self.assertEqual(response.status_code, 200)
+
+    def test_upload_image_view_failure(self):
+        self.client.logout()
+
+        response = self.client.post(reverse('upload_image'))
+
+        self.assertEqual(response.status_code, 302)
 
 class ObjectDetectionViewTestCase(TestCase):
     def setUp(self):
@@ -183,6 +190,13 @@ class RenderOffsideViewTestCase(TestCase):
         render_offside_view(request)
 
         self.assertIsNotNone(request.session['offside_radar_view'])
+
+    def test_render_offside_view_failure(self):
+        self.client.logout()
+
+        response = self.client.post(reverse('display_offside'))
+
+        self.assertEqual(response.status_code, 302)
 
 class ClassifyOffsideViewTestCase(TestCase):
     def setUp(self):
@@ -414,6 +428,13 @@ class LogsViewTestCase(TestCase):
             detection_id=detection,
             referee_id=self.user,
         )
+
+    def test_logs_view_failure(self):
+        self.client.logout()
+
+        response = self.client.post(self.url)
+
+        self.assertEqual(response.status_code, 302)
 
     def test_logs_view_last_week(self):
         """Test filtering offside decisions for the last week."""
