@@ -23,7 +23,7 @@ class TestClassificationHelperIntegration(unittest.TestCase):
         self.helper = ClassificationHelper()
 
     def generate_dummy_player_crop(self, color=(255, 0, 0)):
-        img = np.full((100, 50, 3), color, dtype=np.uint8)  # simulate red/blue uniform
+        img = np.full((100, 50, 3), color, dtype=np.uint8)
         return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     # Test for classifying players into teams
@@ -52,7 +52,7 @@ class TestClassificationHelperIntegration(unittest.TestCase):
         ]
 
         players = DummyDetections(player_boxes, [0, 0, 1, 1])
-        goalkeepers = DummyDetections(goalkeeper_boxes, [0, 0])  # Class ids not used
+        goalkeepers = DummyDetections(goalkeeper_boxes, [0, 0])
 
         result = self.helper.resolve_goalkeepers_team_id(players, goalkeepers)
         self.assertTrue(np.array_equal(result, np.array([0, 1])))

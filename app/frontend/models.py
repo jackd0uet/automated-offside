@@ -1,8 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-# TODO: update database diagram
-
 class DecisionChoices(models.TextChoices):
     ONSIDE = 'onside', 'Onside'
     OFFSIDE = 'offside', 'Offside'

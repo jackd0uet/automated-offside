@@ -1,4 +1,3 @@
-import base64
 import cv2
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, Request

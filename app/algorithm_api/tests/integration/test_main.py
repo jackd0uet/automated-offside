@@ -1,6 +1,4 @@
-# import sys
-# sys.path.append('/Users/jackdouet/Development/auto-off/automated-offside/app/algorithm_api')
-
+from datetime import datetime
 from fastapi.testclient import TestClient
 from io import BytesIO
 import json
@@ -38,16 +36,79 @@ def test_object_detection():
     assert response.status_code == 200
     response_json = response.json()
 
-    # Check for expected keys in the response
-    assert "ball_xy" in response_json
-    assert "players_xy" in response_json
-    assert "refs_xy" in response_json
-    assert "players_detections" in response_json
-    assert "file_path" in response_json
+    # Basic structure validation
+    expected_keys = [
+        "ball_xy", "players_xy", "refs_xy", "players_detections", "file_path"
+    ]
+    for key in expected_keys:
+        assert key in response_json
 
-    # Ensure specific structure of the returned data
-    assert isinstance(response_json["ball_xy"]["tracker_id"], list)
-    assert isinstance(response_json["ball_xy"]["xy"], list)
+    # ball_xy structure
+    ball_xy = response_json["ball_xy"]
+    assert isinstance(ball_xy, dict)
+    assert isinstance(ball_xy.get("tracker_id"), list)
+    assert isinstance(ball_xy.get("xy"), list)
+    assert all(isinstance(tid, int) for tid in ball_xy["tracker_id"])
+    for xy in ball_xy["xy"]:
+        assert isinstance(xy, list) and len(xy) == 2
+        assert all(isinstance(coord, (int, float)) for coord in xy)
+
+    # players_xy structure
+    players_xy = response_json["players_xy"]
+    assert isinstance(players_xy, dict)
+    assert isinstance(players_xy.get("tracker_id"), list)
+    assert isinstance(players_xy.get("xy"), list)
+    assert all(isinstance(tid, int) for tid in players_xy["tracker_id"])
+    for xy in players_xy["xy"]:
+        assert isinstance(xy, list) and len(xy) == 2
+        assert all(isinstance(coord, (int, float)) for coord in xy)
+
+    # refs_xy structure
+    refs_xy = response_json["refs_xy"]
+    assert isinstance(refs_xy, dict)
+    assert isinstance(refs_xy.get("tracker_id"), list)
+    assert isinstance(refs_xy.get("xy"), list)
+    assert all(isinstance(tid, int) for tid in refs_xy["tracker_id"])
+    for xy in refs_xy["xy"]:
+        assert isinstance(xy, list) and len(xy) == 2
+        assert all(isinstance(coord, (int, float)) for coord in xy)
+
+    # players_detections structure
+    players_detections = response_json["players_detections"]
+    assert isinstance(players_detections, dict)
+    for key in ["xyxy", "confidence", "class_id", "tracker_id", "class_name"]:
+        assert key in players_detections
+
+    # Validate players_detections["xyxy"]
+    xyxy = players_detections["xyxy"]
+    assert isinstance(xyxy, list)
+    for box in xyxy:
+        assert isinstance(box, list) and len(box) == 4
+        assert all(isinstance(coord, (int, float)) for coord in box)
+
+    # Validate players_detections["confidence"]
+    confidence = players_detections["confidence"]
+    assert isinstance(confidence, list)
+    assert all(isinstance(conf, float) for conf in confidence)
+
+    # Validate players_detections["class_id"]
+    class_id = players_detections["class_id"]
+    assert isinstance(class_id, list)
+    assert all(isinstance(cid, int) for cid in class_id)
+
+    # Validate players_detections["tracker_id"]
+    tracker_id = players_detections["tracker_id"]
+    assert isinstance(tracker_id, list)
+    assert all(isinstance(tid, int) for tid in tracker_id)
+
+    # Validate players_detections["class_name"]
+    class_name = players_detections["class_name"]
+    assert isinstance(class_name, list)
+    assert all(isinstance(cname, str) for cname in class_name)
+    assert "goalkeeper" in class_name
+
+    # Check file_path is a string
+    assert isinstance(response_json["file_path"], str)
 
 # Test object detection 400 on string confidence input
 def test_object_detection_bad_confidence():
@@ -126,11 +187,16 @@ def test_offside_classification():
         },
         "defending_team": None,
     }
+    classification_start = datetime.now()
 
     response = client.post(
         "/offside-classification/",
         data=json.dumps(data)
     )
+
+    classification_end = datetime.now()
+
+    print(f"Offside classification took {classification_end - classification_start} seconds to run")
     
     assert response.status_code == 200
     response_json = response.json()
