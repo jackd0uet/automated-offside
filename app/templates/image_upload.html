@@ -1,42 +1,45 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center mb-5 display-4 fw-semibold">Upload a Match Image to Visualise Positions</h1>
-
+<div class="container-fluid px-4">
     <div class="row justify-content-center">
         <div class="col-md-12 col-lg-10 col-xl-9">
-            <div class="card shadow-lg border-0">
-                <div class="card-body p-5">
+
+            <h1 class="text-center my-4 display-4 fw-semibold">
+                Upload a Match Image to Visualise Positions
+            </h1>
+
+            <div class="card shadow-lg border-0" >
+                <div class="card-body">
                     <form id="uploadForm" enctype="multipart/form-data" class="text-center">
                         <div id="filePickerContainer" class="mb-4">
                             <input type="file" id="imageInput" name="image" accept="image/*" class="form-control" required>
                         </div>
 
                         <!-- Image preview (hidden by default) -->
-                        <div id="imageContainer" class="fade mt-4" style="display: none;">
+                        <div id="imageContainer" class="fade mt-3" style="display: none;">
                             <h3 class="text-center fw-medium mb-3">Selected Image</h3>
                             <div class="d-flex justify-content-center" >
-                                <img id="previewImage" class="img-fluid shadow" style="max-width: 99%;"/>
+                                <img id="previewImage" class="img-fluid shadow"/>
                             </div>
                         </div>
 
-                        <div class="my-5 text-center">
+                        <div class="my-3 text-center">
                             <button id="runDetectionBtn" type="submit" class="btn btn-primary btn-lg px-5">Run Visualisation</button>
                         </div>
                     </form>
 
                     <!-- Progress bar (hidden by default) -->
-                    <div id="progressContainer" class="progress mt-4 fade" style="display: none; height: 24px;">
+                    <div id="progressContainer" class="progress mt-3 fade" style="display: none; height: 24px;">
                         <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
                             role="progressbar" style="width: 0%; height: 100%">0%</div>
                     </div>
 
                     <!-- Detection result (hidden by default) -->
                     <div id="detectionContainer" style="display: none;" class="fade mt-5">
-                        <h3 class="mt-4 mb-3 fw-medium text-center">Visualisation Result</h3>
-                        <div class="d-flex justify-content-center">
-                            <img id="resultImage" class="img-fluid mt-2 shadow" style="max-width: 99%;"/>
+                        <h3 class="mb-3 fw-medium text-center">Visualisation Result</h3>
+                        <div class="d-flex justify-content-center mb-4">
+                            <img id="resultImage" class="img-fluid mt-2 shadow"/>
                         </div>
                     </div>
                 </div>
