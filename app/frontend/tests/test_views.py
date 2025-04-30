@@ -394,35 +394,40 @@ class LogsViewTestCase(TestCase):
     def setUp(self):
         self.url = reverse('logs')
 
-        base_time = make_aware(datetime(2025, 4, 22))
+        base_time = make_aware(datetime.now())
 
         detection = ObjectDetection.objects.create()
         self.user = User.objects.create_user(username='logs_tester', password='password')
         self.client.login(username='logs_tester', password='password')
 
+        self.time_uploaded1 = base_time
+        self.time_uploaded2 = base_time - timedelta(days=20)
+        self.time_uploaded3 = base_time - timedelta(days=45)
+        self.time_uploaded4 = base_time - timedelta(days=400)
+
         self.offside1 = OffsideDecision.objects.create(
-            time_uploaded=base_time,
+            time_uploaded=self.time_uploaded1,
             algorithm_decision=True,
             final_decision=True,
             detection_id=detection,
             referee_id=self.user
         )
         self.offside2 = OffsideDecision.objects.create(
-            time_uploaded=base_time - timedelta(days=20),
+            time_uploaded=self.time_uploaded2,
             algorithm_decision=True,
             final_decision=True,
             detection_id=detection,
             referee_id=self.user
         )
         self.offside3 = OffsideDecision.objects.create(
-            time_uploaded=base_time - timedelta(days=45),
+            time_uploaded=self.time_uploaded3,
             algorithm_decision=False,
             final_decision=False,
             detection_id=detection,
             referee_id=self.user,
         )
         self.offside4 = OffsideDecision.objects.create(
-            time_uploaded=base_time - timedelta(days=400),
+            time_uploaded=self.time_uploaded4,
             algorithm_decision=True,
             final_decision=False,
             detection_id=detection,
@@ -475,7 +480,8 @@ class LogsViewTestCase(TestCase):
 
 
     def test_logs_view_start_date(self):
-        response = self.client.get(reverse("logs"), {"start_date": "2025-04-01"})
+        start_date = (self.time_uploaded3 + timedelta(days=1)).date().isoformat()
+        response = self.client.get(reverse("logs"), {"start_date": start_date})
         self.assertEqual(response.status_code, 200)
 
         decisions = response.context["offside_decisions"]
@@ -485,7 +491,8 @@ class LogsViewTestCase(TestCase):
         self.assertFalse(decisions.filter(pk=self.offside4.pk).exists())
 
     def test_logs_view_end_date(self):
-        response = self.client.get(reverse("logs"), {"end_date": "2025-03-10"})
+        end_date = (self.time_uploaded3 + timedelta(days=1)).date().isoformat()
+        response = self.client.get(reverse("logs"), {"end_date": end_date})
         self.assertEqual(response.status_code, 200)
 
         decisions = response.context["offside_decisions"]
@@ -495,9 +502,11 @@ class LogsViewTestCase(TestCase):
         self.assertTrue(decisions.filter(pk=self.offside4.pk).exists())
 
     def test_logs_view_start_and_end_date(self):
+        start_date = (self.time_uploaded3 - timedelta(days=5)).date().isoformat()
+        end_date = (self.time_uploaded1 + timedelta(days=5)).date().isoformat()
         response = self.client.get(reverse("logs"), {
-            "start_date": "2025-03-01",
-            "end_date": "2025-04-30"
+            "start_date": start_date,
+            "end_date": end_date
         })
         self.assertEqual(response.status_code, 200)
 
