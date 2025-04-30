@@ -10,7 +10,8 @@
     a. Create an account on Roboflow.  
     b. Follow these instructions to get your Roboflow API key:
     https://docs.roboflow.com/api-reference/authentication
-5.  Run `pip install -r requirements.txt`
+5.  Ensure that Python version==3.9.21
+6.  Run `pip install -r requirements.txt`
 5.  Run `cd app && python manage.py runserver`
 6.  In another terminal window run `cd app/algorithm_api && uvicorn main:app --host 0.0.0.0 --port 8002 --reload`
 
